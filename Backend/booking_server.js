@@ -305,9 +305,8 @@ async function sendCancellationEmail(username, email, bookingId, auditoriumName,
     to: email,
     subject: 'Booking Cancellation Confirmation',
     text: `
-      Dear ${username},
-
-      Your booking (ID: ${bookingId}) at ${auditoriumName} has been successfully cancelled.
+      
+      Your booking at ${auditoriumName} has been successfully cancelled.
 
       Refund Details:
       - If cancelled before 24 hours, you will receive a full refund.

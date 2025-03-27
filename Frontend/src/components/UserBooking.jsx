@@ -35,7 +35,7 @@ function UserBooking() {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
 
     try {
-      await axios.put(`http://localhost:5001/user/bookings/cancel/${bookingId}`);
+      await axios.get(`http://localhost:5001/cancel-booking/${bookingId}`);
       alert("✅ Booking cancelled successfully!");
 
       // Refresh bookings after cancellation
