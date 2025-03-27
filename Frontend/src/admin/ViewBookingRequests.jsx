@@ -24,6 +24,24 @@ function ViewBookingRequests() {
       setLoading(false);
     }
   };
+  // for format date and time
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "N/A"; // Handle empty values
+
+    const date = new Date(isoString);
+
+    // Extract UTC parts manually
+    const day = date.getUTCDate();
+    const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+    const year = date.getUTCFullYear();
+
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+
+    return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+  };
 
   const openModal = (booking) => {
     setSelectedBooking(booking);
@@ -93,6 +111,7 @@ function ViewBookingRequests() {
                 <th className="border p-2 sm:p-3">Date</th>
                 <th className="border p-2 sm:p-3">Event Name</th>
                 <th className="border p-2 sm:p-3">Cost</th>
+                <th className="border p-2 sm:p-3">Request At</th>
                 <th className="border p-2 sm:p-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -212,6 +231,7 @@ function ViewBookingRequests() {
                   </td>
                   <td className="border p-2 sm:p-3">{booking.event_name}</td>
                   <td className="border p-2 sm:p-3">₹{booking.total_amount}</td>
+                  <td className="border p-2 sm:p-3">{formatDateTime(booking.created_at)}</td>
                   <td className="border p-2 sm:p-3 text-center">
                     {booking.booking_status === "Pending" && (
                       <button
