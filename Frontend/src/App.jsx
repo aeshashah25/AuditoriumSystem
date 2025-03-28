@@ -2,7 +2,6 @@ import React from 'react'
 import Home from './home/Home'
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import Layout from "./components/Layout";
-import Signup from './components/Signup'
 // import Contact from './contact/Contact'
 import About from './about/About'
 import Login from './components/Login';
@@ -40,7 +39,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/feedback" element={<Feedback />} />
           </Route>
-          <Route path="/signup" element={<Signup />} />
+          {/* <Route path="/signup" element={<Signup />} /> */}
           {/* <Route path="/contact" element={<Contact />} /> */}
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
