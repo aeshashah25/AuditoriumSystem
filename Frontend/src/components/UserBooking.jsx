@@ -20,6 +20,25 @@ function UserBooking() {
     }
   }, []);
 
+  // for format date and time
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "N/A"; // Handle empty values
+
+    const date = new Date(isoString);
+
+    // Extract UTC parts manually
+    const day = date.getUTCDate();
+    const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+    const year = date.getUTCFullYear();
+
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+
+    return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+  };
+
   const fetchBookings = async (userId) => {
     try {
       const response = await axios.get(`http://localhost:5001/user/bookings/${userId}`);
@@ -35,7 +54,7 @@ function UserBooking() {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
 
     try {
-      await axios.put(`http://localhost:5001/user/bookings/cancel/${bookingId}`);
+      await axios.get(`http://localhost:5001/cancel-booking/${bookingId}`);
       alert("✅ Booking cancelled successfully!");
 
       // Refresh bookings after cancellation
@@ -43,6 +62,21 @@ function UserBooking() {
     } catch (error) {
       console.error("❌ Error cancelling booking:", error);
       alert("❌ Failed to cancel booking. Try again later.");
+    }
+  };
+
+  const PaymentBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to proceed with the payment?")) return;
+
+    try {
+      await axios.post(`http://localhost:5001/make-payment/${bookingId}`);
+      alert("✅ Payment successful!");
+
+      // Refresh bookings after payment
+      if (userId) fetchBookings(userId);
+    } catch (error) {
+      console.error("❌ Error processing payment:", error);
+      alert("❌ Failed to make payment. Try again later.");
     }
   };
 
@@ -66,6 +100,7 @@ function UserBooking() {
   const approvedBookings = upcomingBookings.filter((b) => b.booking_status === "approved");
   const rejectedBookings = upcomingBookings.filter((b) => b.booking_status === "rejected");
   const cancelledBookings = upcomingBookings.filter((b) => b.booking_status === "cancelled");
+  const confirmbookings = upcomingBookings.filter((b) => b.booking_status === "confirm");
 
   const getFilteredBookings = () => {
     switch (activeSubTab) {
@@ -73,6 +108,8 @@ function UserBooking() {
         return pendingBookings;
       case "Approved":
         return approvedBookings;
+      case "Confirm":
+        return confirmbookings;
       case "Rejected":
         return rejectedBookings;
       case "Cancelled":
@@ -114,7 +151,7 @@ function UserBooking() {
 
               {/* Sub-tabs (Pending, Approved, Rejected, Cancelled) */}
               <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4">
-                {["Pending", "Approved", "Rejected", "Cancelled"].map((subTab) => (
+                {["Pending", "Approved", "Confirm", "Rejected", "Cancelled"].map((subTab) => (
                   <button
                     key={subTab}
                     onClick={() => setActiveSubTab(subTab)}
@@ -126,7 +163,6 @@ function UserBooking() {
                   </button>
                 ))}
               </div>
-
 
               {/* Booking List */}
               {loading ? (
@@ -244,13 +280,31 @@ function UserBooking() {
                             }
                           })()}
                         </p>
-
                         <p className="text-gray-600">
                           <strong>Amentities:</strong> {booking.amenities}
                         </p>
-                        <p className="text-lg font-medium text-gray-800">
-                          <strong>Total Amount:</strong> ₹{booking.total_amount}
+                        {/* show Total Amount if booking_status is pending,approved,rejcted and cancelled */}
+                        {booking.booking_status !== "confirm" && (
+                          <p className="text-lg font-medium text-gray-800">
+                            <strong>Total Amount:</strong> ₹{booking.total_amount}
+                          </p>
+                        )}
+                        {/* booking date in show everywhere */}
+                        <p className="text-lg text-gray-800">
+                          <strong>Booking Request Date:</strong> {formatDateTime(booking.created_at)}
                         </p>
+                        {/* show when rejected */}
+                        {booking.booking_status === "rejected" && booking.updated_date && (
+                          <p className="text-lg text-gray-800">
+                            <strong>Rejected Date:</strong> {formatDateTime(booking.updated_date)}
+                          </p>
+                        )}
+                        {/* show when cancelled */}
+                        {booking.booking_status === "cancelled" && booking.updated_date && (
+                          <p className="text-lg text-gray-800">
+                            <strong>Cancelled Date:</strong> {formatDateTime(booking.updated_date)}
+                          </p>
+                        )}
                         <p
                           className={`text-lg font-semibold ${booking.booking_status === "Pending"
                             ? "text-yellow-500"
@@ -261,18 +315,32 @@ function UserBooking() {
                                 : "text-gray-500"
                             }`}
                         >
-                          <strong>Status:</strong> {booking.booking_status}
+                          <strong>Booking Status:</strong> {booking.booking_status}
                           {booking.booking_status === "rejected" && (
                             <span className="ml-2 text-sm text-red-400">({booking.reject_reason})</span>
                           )}
                         </p>
+
+                        {/* show when approved */}
+                        {booking.booking_status === "approved" && booking.updated_date && (
+                          <p className="text-lg text-gray-800">
+                            <strong>Approved Date:</strong> {formatDateTime(booking.updated_date)}
+                          </p>
+                        )}
+
+                        {booking.booking_status === "approved" && booking.payment_due && (
+                          <p className="text-lg">
+                            <strong>Payment Due:</strong> {formatDateTime(booking.payment_due)}
+                          </p>
+                        )}
+
                         {/* Show Discount & Final Payable Amount if Approved and Discount > 0 */}
                         {booking.booking_status === "approved" && booking.approved_discount > 0 && (
                           <>
                             <p className="text-gray-700">
                               <strong>Discount Applied:</strong> {booking.approved_discount}%
                             </p>
-                            <p className="text-lg font-medium text-green-600">
+                            <p className="text-lg font-medium">
                               <strong>Final Payable Amount:</strong> ₹{booking.discount_amount}
                             </p>
                           </>
@@ -280,30 +348,70 @@ function UserBooking() {
 
                         {/* /* Show Payment Status when Booking is Approved */}
                         {booking.booking_status === "approved" && (
-                          <p
-                            className={`text-lg font-semibold ${booking.payment_status === "Pending"
-                              ? "text-yellow-500"
-                              : booking.payment_status === "Completed"
-                                ? "text-green-500"
-                                : "text-red-500"
-                              }`}
-                          >
+                          <p>
                             <strong>Payment Status:</strong> {booking.payment_status}
                           </p>
                         )}
 
+                        {/* /* Show Payment Status when Booking is confirm */}
+                        {booking.booking_status === "confirm" && (
+                          <div className="text-lg font-semibold">
+                            {/* Payment Status */}
+                            <p
+                              className={`text-lg font-semibold ${booking.payment_status === "Pending"
+                                ? "text-yellow-500"
+                                : booking.payment_status === "successful"
+                                  ? "text-green-500"
+                                  : "text-red-500"
+                                }`}
+                            >
+                              <strong>Payment Status:</strong> {booking.payment_status}
+                            </p>
+                            <p className="text-lg font-medium text-gray-800">
+                              <strong>Amount:</strong> ₹{booking.discount_amount}
+                            </p>
+
+                            {/* Payment Date */}
+                            {booking.payment_date && (
+                              <p className="text-lg text-gray-800">
+                                <strong>Payment Date:</strong> {formatDateTime(booking.payment_date)}
+                              </p>
+                            )}
+
+                            {/* Event Status */}
+                            <p className="text-lg text-blue-600">
+                              <strong>Event Status:</strong> {booking.event_status || "Pending"}
+                            </p>
+                          </div>
+                        )}
+
                       </div>
 
-                      {/* Show Cancel Button for Pending & Approved Bookings */}
-                      {["Pending", "approved"].includes(booking.booking_status) && (
-                        <button
-                          onClick={() => cancelBooking(booking.id)}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
-                        >
-                          Cancel
-                        </button>
-                      )}
+                      <div className="flex flex-col items-end space-y-2">
+                        {/* Show Cancel Button for Pending & Approved Bookings */}
+                        {["Pending", "approved","confirm"].includes(booking.booking_status) && (
+                          <button
+                            onClick={() => cancelBooking(booking.id)}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
+                          >
+                            Cancel
+                          </button>
+                        )}
+
+                        {/* Show Make Payment Button for approved booking */}
+                        {booking.booking_status === "approved" && (
+                          <button
+                            onClick={() => PaymentBooking(booking.id)}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                            Payment
+                          </button>
+                        )}
+
+                      </div>
+
+
                     </li>
+
                   ))}
                 </ul>
               ) : (

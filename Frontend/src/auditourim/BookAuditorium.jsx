@@ -210,7 +210,7 @@ function BookAuditorium() {
         setSelectedAmenities([]);
         setTotalPrice(0);
         // ✅ Navigate to MainPage after successful booking
-        navigate("/MainPage");
+        navigate("/your-booking-page");
       } else {
         const errorData = await response.json();
         alert(`❌ Booking Failed: ${errorData.message}`);

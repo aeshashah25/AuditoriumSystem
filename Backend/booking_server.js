@@ -241,92 +241,6 @@ app.post("/update-booking-status", async (req, res) => {
   }
 });
 
-
-// Cancel booking API
-app.get('/cancel-booking/:bookingId', async (req, res) => {
-  const bookingId = req.params.bookingId;
-
-  try {
-    const pool = await sql.connect(process.env.DB_CONNECTION_STRING);
-
-    // Execute stored procedure to cancel the booking
-    await pool.request()
-      .input('bookingId', sql.Int, bookingId)
-      .execute('sp_CancelBooking');
-
-    // Fetch user details, auditorium name, and refund amount
-    const queryResult = await pool.request()
-      .input('bookingId', sql.Int, bookingId)
-      .query(`
-        SELECT 
-          u.name, 
-          u.email, 
-          a.name AS auditorium_name,
-          b.refund_amount
-        FROM bookings b
-        JOIN UsersDetails u ON b.UserID = u.id
-        JOIN auditoriums a ON b.AuditoriumID = a.id
-        WHERE b.id = @bookingId
-      `);
-
-    if (queryResult.recordset.length === 0) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    const { username, email, auditorium_name, refund_amount } = queryResult.recordset[0];
-
-    // Send cancellation email
-    await sendCancellationEmail(username, email, bookingId, auditorium_name, refund_amount);
-
-    res.json({
-      message: 'Booking successfully cancelled. Email sent to user.'
-    });
-
-  } catch (error) {
-    console.error('Error cancelling booking:', error);
-    res.status(500).json({ error: 'Error cancelling booking' });
-  }
-});
-
-// Function to send cancellation email
-async function sendCancellationEmail(username, email, bookingId, auditoriumName, refundAmount) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Booking Cancellation Confirmation',
-    text: `
-      Dear ${username},
-
-      Your booking (ID: ${bookingId}) at ${auditoriumName} has been successfully cancelled.
-
-      Refund Details:
-      - If cancelled before 24 hours, you will receive a full refund.
-      - If cancelled between 24 to 12 hours, you will receive a 50% refund.
-      - If cancelled between 12 to 6 hours, you will receive a 30% refund.
-      - If cancelled after 6 hours, no refund is applicable.
-
-      Your refund amount is ₹${refundAmount} and will be reflected back to your account within 24 hours. 
-      If you do not receive it, please contact the administrator.
-
-      Regards,
-      Maharaja Sayajirao University,vadodara
-    `
-  };
-
-  await transporter.sendMail(mailOptions);
-}
-
-
 // Function to merge time slots and handle both 'date' and 'date_range'
 function mergeTimeSlots(dates) {
   return dates.map(entry => {
@@ -430,8 +344,150 @@ async function sendEmailNotification(email, action, eventName, dates, rejectReas
   }
 }
 
+// Cancel booking API
+app.get('/cancel-booking/:bookingId', async (req, res) => {
+  const bookingId = req.params.bookingId;
+
+  try {
+    const pool = await sql.connect(process.env.DB_CONNECTION_STRING);
+
+    // Execute stored procedure to cancel the booking
+    await pool.request()
+      .input('bookingId', sql.Int, bookingId)
+      .execute('sp_CancelBooking');
+
+    // Fetch user details, auditorium name, and refund amount
+    const queryResult = await pool.request()
+      .input('bookingId', sql.Int, bookingId)
+      .query(`
+        SELECT 
+          u.name, 
+          u.email, 
+          a.name AS auditorium_name,
+          b.refund_amount
+        FROM bookings b
+        JOIN UsersDetails u ON b.UserID = u.id
+        JOIN auditoriums a ON b.AuditoriumID = a.id
+        WHERE b.id = @bookingId
+      `);
+
+    if (queryResult.recordset.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const { username, email, auditorium_name, refund_amount } = queryResult.recordset[0];
+
+    // Send cancellation email
+    await sendCancellationEmail(username, email, bookingId, auditorium_name, refund_amount);
+
+    res.json({
+      message: 'Booking successfully cancelled. Email sent to user.'
+    });
+
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ error: 'Error cancelling booking' });
+  }
+});
+
+// Function to send cancellation email
+async function sendCancellationEmail(username, email, bookingId, auditoriumName, refundAmount) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Booking Cancellation Confirmation',
+    text: `
+      
+      Your booking at ${auditoriumName} has been successfully cancelled.
+
+      Refund Details:
+      - If cancelled before 24 hours, you will receive a full refund.
+      - If cancelled between 24 to 12 hours, you will receive a 50% refund.
+      - If cancelled between 12 to 6 hours, you will receive a 30% refund.
+      - If cancelled after 6 hours, no refund is applicable.
+
+      Your refund amount is ₹${refundAmount} and will be reflected back to your account within 24 hours. 
+      If you do not receive it, please contact the administrator.
+
+      Regards,
+      Maharaja Sayajirao University,vadodara
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+}
 
 
+app.post("/make-payment/:bookingId", async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch booking and user details
+    const query = `
+      SELECT b.id, b.event_name, u.email 
+      FROM bookings b 
+      JOIN UsersDetails u ON b.UserID = u.id 
+      WHERE b.id = @bookingId
+    `;
+    const request = pool.request();
+    request.input("bookingId", sql.Int, bookingId);
+    const result = await request.query(query);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: "Booking not found!" });
+    }
+
+    const booking = result.recordset[0];
+
+    // Update booking status without passing payment_date
+    await pool.request()
+    .input("bookingId", sql.Int, bookingId)
+    .execute("UpdateBookingPayment"); // Call the stored procedure
+
+    // Send confirmation email
+    await sendConfirmationEmail(booking.email, booking.event_name);
+
+    res.status(200).json({ success: true, message: "Payment successful! Email sent." });
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    res.status(500).json({ success: false, message: "Payment failed. Try again." });
+  }
+});
+
+const sendConfirmationEmail = async (email, eventName, paymentDate) => {
+  let formattedDate = new Date(paymentDate).toLocaleString(); // Format date for email
+
+  let transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER, // Use environment variables for security
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  let mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Booking Confirmation & Payment Receipt",
+    text: `Your booking for "${eventName}" has been successfully confirmed! 
+    Payment Date: ${formattedDate} 
+    Thank you for your payment.`,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
 
 //admin View Payment Status
 app.get('/admin/view-payment-status', async (req, res) => {
