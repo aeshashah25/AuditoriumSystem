@@ -26,6 +26,6 @@ export default {
   },
   darkMode: 'class',
   plugins: [
-    require('daisyui'),
+ //   require('daisyui'),
   ],
 }
