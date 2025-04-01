@@ -176,10 +176,13 @@ const formik = useFormik({
     if (!isLogin && !otpSent) {
       // Step 1: Send OTP
       try {
+        console.log("Sending OTP with values:", values);
+
         const response = await axios.post("http://localhost:5000/api/send-otp", values);
         alert(response.data.message);
         setSignupEmail(values.email);
         setOtpSent(true);
+
         setError("");
       } catch (err) {
         setError(err.response?.data?.message || "Error sending OTP.");
@@ -194,6 +197,8 @@ const formik = useFormik({
         alert(response.data.message);
         setIsOtpVerified(true);
         setError("");
+        setIsLogin(true); // Set login mode
+
       } catch (err) {
         setError(err.response?.data?.message || "Invalid OTP. Try again or request a new one.");
       }
@@ -209,7 +214,7 @@ const formik = useFormik({
         formik.resetForm(); // ✅ Clear form
 
         // ✅ Redirect to login (force navigation)
-        setIsLogin(false);
+        setIsLogin(true); // Set login mode
       } catch (err) {
         setError(err.response?.data?.message || "Signup failed.");
       }
