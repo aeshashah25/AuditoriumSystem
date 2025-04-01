@@ -305,6 +305,27 @@ function UserBooking() {
                             <strong>Cancelled Date:</strong> {formatDateTime(booking.updated_date)}
                           </p>
                         )}
+                        {/* Show if Refund Applied condition */}
+                        {booking.booking_status === "cancelled" && booking.payment_status === "successful" && booking.refund_amount !== null && (
+                          <>
+                            {/* Show Discount Applied only if it's greater than 0 */}
+                            {booking.approved_discount > 0 && (
+                              <>
+                              <p className="text-gray-700">
+                                <strong>Discount Applied:</strong> {booking.approved_discount}%
+                              </p>
+                              <p className="text-lg font-medium">
+                              <strong>Final Payable Amount:</strong> ₹{booking.discount_amount}
+                            </p>
+                            </>
+                            )}
+
+                            <p className="text-gray-700">
+                              <strong>Refund Amount:</strong> ₹{booking.refund_amount}
+                            </p>
+                          </>
+                        )}
+
                         <p
                           className={`text-lg font-semibold ${booking.booking_status === "Pending"
                             ? "text-yellow-500"
@@ -389,7 +410,7 @@ function UserBooking() {
 
                       <div className="flex flex-col items-end space-y-2">
                         {/* Show Cancel Button for Pending & Approved Bookings */}
-                        {["Pending", "approved","confirm"].includes(booking.booking_status) && (
+                        {["Pending", "approved", "confirm"].includes(booking.booking_status) && (
                           <button
                             onClick={() => cancelBooking(booking.id)}
                             className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
