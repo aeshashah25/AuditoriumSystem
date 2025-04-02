@@ -39,7 +39,7 @@ function ViewUser() {
         <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8 lg:ml-3">
             <div className="bg-white p-6 shadow-md w-full max-w-6xl mx-auto overflow-hidden rounded-lg">
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold mb-2 sm:mb-0">View Users</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6 ">View Users</h2>
                     <input
                         type="text"
                         placeholder="Search by username"

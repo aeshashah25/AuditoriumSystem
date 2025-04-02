@@ -16,24 +16,24 @@ function ViewBookingStatus() {
             .catch((error) => console.error("Error fetching payment requests:", error));
     }, []);
 
-      // for format date and time
-  const formatDateTime = (isoString) => {
-    if (!isoString) return "N/A"; // Handle empty values
+    // for format date and time
+    const formatDateTime = (isoString) => {
+        if (!isoString) return "N/A"; // Handle empty values
 
-    const date = new Date(isoString);
+        const date = new Date(isoString);
 
-    // Extract UTC parts manually
-    const day = date.getUTCDate();
-    const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
-    const year = date.getUTCFullYear();
+        // Extract UTC parts manually
+        const day = date.getUTCDate();
+        const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+        const year = date.getUTCFullYear();
 
-    let hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+        let hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
 
-    return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
-  };
+        return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+    };
 
     // Filter payment requests based on searchQuery, auditorium, and status
     const filteredRequests = paymentRequests.filter((request) => {
@@ -52,7 +52,7 @@ function ViewBookingStatus() {
                 {/* Heading & Search Bar */}
                 <div className="pb-6">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-center md:text-left">View Booking Status</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6">View Booking Status</h2>
                         <input
                             type="text"
                             placeholder="Search by username or auditorium"
@@ -99,7 +99,14 @@ function ViewBookingStatus() {
                                 <th className="border p-2">Booking Status</th>
                                 <th className="border p-2">Discount %</th>
                                 <th className="border p-2">Reject Reason</th>
-                                <th className="border p-2">Amount</th>
+                                <th className="border p-2">Pay Amount</th>
+                                <th className="border p-2">
+                                    Refund Amount<br />
+                                    <span className="text-[10px] text-gray-600">
+                                        Canceled After Payment
+                                    </span>
+                                </th>
+
                                 <th className="border p-2">Status Update</th>
                             </tr>
                         </thead>
@@ -112,7 +119,8 @@ function ViewBookingStatus() {
                                 filteredRequests.map((request, index) => (
                                     <tr key={index} className="text-center border-b">
                                         <td className="border p-2">{index + 1}</td>
-                                        <td className="border p-2">{request.user_name}</td>
+                                        <td className="border p-2">{request.user_name}
+                                        </td>
                                         <td className="border p-2">{request.auditorium_name}</td>
                                         <td className="border p-2 text-xs sm:text-sm">
 
@@ -222,6 +230,7 @@ function ViewBookingStatus() {
                                         <td className="border p-2">{request.approved_discount ? `${request.approved_discount}%` : "—"}</td>
                                         <td className="border p-2">{request.reject_reason || "—"}</td>
                                         <td className="border p-2">{request.discount_amount ? `₹${request.discount_amount}` : "—"}</td>
+                                        <td className="border p-2">{request.refund_amount ? `₹${request.refund_amount}` : "—"}</td>
                                         <td className="border p-2">{formatDateTime(request.updated_date)}</td>
                                     </tr>
                                 ))

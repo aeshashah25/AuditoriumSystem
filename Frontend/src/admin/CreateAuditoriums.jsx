@@ -127,7 +127,7 @@ const CreateAuditoriums = () => {
   return (
 
     <div className="max-w-5xl mx-auto bg-white p-6 sm:p-8 shadow-md mt-6 px-6 sm:px-10 rounded-lg">
-      <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6 text-center">
+      <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6 ">
         {id ? "Edit Auditorium" : "Add Auditorium"}
       </h2>
 

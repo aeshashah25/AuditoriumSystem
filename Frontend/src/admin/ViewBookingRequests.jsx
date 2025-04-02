@@ -94,7 +94,7 @@ function ViewBookingRequests() {
 
   return (
     <div className="p-6 bg-white shadow-md mt-6 mx-4 sm:mx-6 md:mx-10 overflow-hidden">
-      <h2 className="text-xl sm:text-2xl font-bold text-center mb-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6 ">
         View Booking Requests
       </h2>
 

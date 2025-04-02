@@ -453,8 +453,8 @@ app.post("/make-payment/:bookingId", async (req, res) => {
 
     // Update booking status without passing payment_date
     await pool.request()
-    .input("bookingId", sql.Int, bookingId)
-    .execute("UpdateBookingPayment"); // Call the stored procedure
+      .input("bookingId", sql.Int, bookingId)
+      .execute("UpdateBookingPayment"); // Call the stored procedure
 
     // Send confirmation email
     await sendConfirmationEmail(booking.email, booking.event_name);
@@ -497,28 +497,22 @@ app.get('/admin/view-payment-status', async (req, res) => {
       SELECT 
         b.id AS booking_id, 
         ud.name AS user_name, 
-        a.name AS auditorium_name, 
-        FORMAT(b.date, 'yyyy-MM-dd') AS date,
-        b.start_time,
-        b.end_time,
+        ud.email AS user_email,
+        a.name AS auditorium_name,
+		b.event_name,
         b.payment_status,
-        b.total_amount
+		b.payment_date,
+		b.discount_amount
       FROM Bookings b
       INNER JOIN UsersDetails ud ON b.UserId = ud.id
-      INNER JOIN Auditoriums a ON b.AuditoriumId = a.id;
+      INNER JOIN Auditoriums a ON b.AuditoriumId = a.id
+      WHERE b.payment_status = 'successful';
     `;
 
     const result = await pool.request().query(query);
 
-    // Format the response data
-    const formattedResults = result.recordset.map(request => ({
-      ...request,
-      start_time: formatTimeFromSQL(request.start_time),  // Format start time
-      end_time: formatTimeFromSQL(request.end_time),  // Format end time
-    }));
-
-    res.json(formattedResults); // ✅ Send formatted JSON response
-
+    res.json(result.recordset); // ✅ Send formatted JSON response
+    
   } catch (error) {
     console.error('Error fetching booking requests:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -539,6 +533,7 @@ app.get('/admin/view-booking-status', async (req, res) => {
               b.booking_status,
               b.discount_amount,
               b.approved_discount,
+              b.refund_amount,
               b.updated_date,
               b.reject_reason
           FROM Bookings b
@@ -557,41 +552,7 @@ app.get('/admin/view-booking-status', async (req, res) => {
   }
 });
 
-//admin View Event Status
-app.get('/admin/view-event-status', async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    const query = `
-      SELECT 
-        b.id AS booking_id, 
-        ud.name AS user_name, 
-        a.name AS auditorium_name, 
-        FORMAT(b.date, 'yyyy-MM-dd') AS date,
-        b.start_time,
-        b.end_time,
-        b.event_status,
-        b.total_amount
-      FROM Bookings b
-      INNER JOIN UsersDetails ud ON b.UserId = ud.id
-      INNER JOIN Auditoriums a ON b.AuditoriumId = a.id;
-    `;
 
-    const result = await pool.request().query(query);
-
-    // Format the response data
-    const formattedResults = result.recordset.map(request => ({
-      ...request,
-      start_time: formatTimeFromSQL(request.start_time),  // Format start time
-      end_time: formatTimeFromSQL(request.end_time),  // Format end time
-    }));
-
-    res.json(formattedResults); // ✅ Send formatted JSON response
-
-  } catch (error) {
-    console.error('Error fetching booking requests:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 // Fetch bookings for a specific user
 app.get("/user/bookings/:userId", async (req, res) => {
@@ -614,11 +575,11 @@ app.get("/user/bookings/:userId", async (req, res) => {
             ORDER BY b.Dates DESC;`
       );
 
-      const bookings = result.recordset.map(booking => ({
-        ...booking,
-        Dates: JSON.parse(booking.Dates) // Convert stored JSON dates back to array
-      }));
-      res.status(200).json(bookings);
+    const bookings = result.recordset.map(booking => ({
+      ...booking,
+      Dates: JSON.parse(booking.Dates) // Convert stored JSON dates back to array
+    }));
+    res.status(200).json(bookings);
     //res.status(200).json(result.recordset);
   } catch (error) {
     console.error("Error fetching user bookings:", error);

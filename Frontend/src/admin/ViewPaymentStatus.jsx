@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import {FaArrowLeft} from 'react-icons/fa';
 
 function ViewPaymentStatus() {
     const [paymentRequests, setPaymentRequests] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterAuditorium, setFilterAuditorium] = useState("");
     const [filterStatus, setFilterStatus] = useState(""); // New filter for status
-    const navigate = useNavigate();
 
     useEffect(() => {
         axios.get("http://localhost:5001/admin/view-payment-status")
@@ -18,19 +15,24 @@ function ViewPaymentStatus() {
             .catch((error) => console.error("Error fetching payment requests:", error));
     }, []);
 
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-    }
+    // for format date and time
+    const formatDateTime = (isoString) => {
+        if (!isoString) return "N/A"; // Handle empty values
 
-    function formatTime(timeString) {
-        if (!timeString) return "N/A";
-        const [hours, minutes] = timeString.split(":");
-        const date = new Date();
-        date.setHours(hours);
-        date.setMinutes(minutes);
-        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
-    }
+        const date = new Date(isoString);
+
+        // Extract UTC parts manually
+        const day = date.getUTCDate();
+        const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+        const year = date.getUTCFullYear();
+
+        let hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+
+        return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+    };
 
     // Filter payment requests based on searchQuery, auditorium, and status
     const filteredRequests = paymentRequests.filter((request) => {
@@ -46,8 +48,8 @@ function ViewPaymentStatus() {
     return (
         <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
             <div className="bg-white p-6 shadow-md w-full max-w-6xl mx-auto lg:ml-2">
-                <h2 className="text-2xl font-bold mb-4 text-center">View Payment Status</h2>
-                
+                <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6">View Payment Status</h2>
+
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row justify-between mb-4 space-y-4 sm:space-y-0">
                     <input
@@ -57,7 +59,7 @@ function ViewPaymentStatus() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="px-4 py-2 border rounded-md w-full sm:w-1/3"
                     />
-                    
+
                     {/* Auditorium Filter */}
                     <select
                         value={filterAuditorium}
@@ -74,21 +76,6 @@ function ViewPaymentStatus() {
                         )}
                     </select>
 
-                    {/* Status Filter */}
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-4 py-2 border rounded-md w-full sm:w-1/3"
-                    >
-                        <option value="">All Status</option>
-                        {[...new Set(paymentRequests.map((request) => request.payment_status))].map(
-                            (status) => (
-                                <option key={status} value={status}>
-                                    {status}
-                                </option>
-                            )
-                        )}
-                    </select>
                 </div>
 
                 {/* Table */}
@@ -99,12 +86,12 @@ function ViewPaymentStatus() {
                                 <th className="border p-2">SR NO</th>
                                 <th className="border p-2">User Name</th>
                                 <th className="border p-2">Auditorium</th>
-                                <th className="border p-2">Date</th>
-                                <th className="border p-2">Start Time</th>
-                                <th className="border p-2">End Time</th>
+                                <th className="border p-2">Event</th>
                                 {/* <th className="border p-2">Booking Status</th> */}
                                 <th className="border p-2">Payment Status</th>
                                 <th className="border p-2">Amount</th>
+                                <th className="border p-2">Payment Date</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -118,14 +105,18 @@ function ViewPaymentStatus() {
                                 filteredRequests.map((request, index) => (
                                     <tr key={index} className="text-center border-b">
                                         <td className="border p-2">{index + 1}</td>
-                                        <td className="border p-2">{request.user_name}</td>
+                                        <td className="border p-2">{request.user_name}
+                                            <br />
+                                            <span className="text-xs text-gray-500 break-words">
+                                                {request.user_email}
+                                            </span>
+                                        </td>
                                         <td className="border p-2">{request.auditorium_name}</td>
-                                        <td className="border p-2">{formatDate(request.date)}</td>
-                                        <td className="border p-2">{formatTime(request.start_time)}</td>
-                                        <td className="border p-2">{formatTime(request.end_time)}</td>
+                                        <td className="border p-2">{request.event_name}</td>
+                                        <td className="border p-2">{request.payment_status}</td>
+                                        <td className="border p-2 font-semibold">₹{request.discount_amount}</td>
                                         {/* <td className="border p-2 font-semibold">{request.booking_status}</td> */}
-                                        <td className="border p-2 font-semibold">{request.payment_status}</td>
-                                        <td className="border p-2 font-semibold">₹{request.total_amount}</td>
+                                        <td className="border p-2">{formatDateTime(request.payment_date)}</td>
                                     </tr>
                                 ))
                             )}
