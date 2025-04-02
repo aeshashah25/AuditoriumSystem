@@ -539,6 +539,7 @@ app.get('/admin/view-booking-status', async (req, res) => {
               b.booking_status,
               b.discount_amount,
               b.approved_discount,
+              b.updated_date,
               b.reject_reason
           FROM Bookings b
           INNER JOIN UsersDetails ud ON b.UserId = ud.id

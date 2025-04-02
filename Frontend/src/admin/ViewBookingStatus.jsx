@@ -16,6 +16,25 @@ function ViewBookingStatus() {
             .catch((error) => console.error("Error fetching payment requests:", error));
     }, []);
 
+      // for format date and time
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "N/A"; // Handle empty values
+
+    const date = new Date(isoString);
+
+    // Extract UTC parts manually
+    const day = date.getUTCDate();
+    const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+    const year = date.getUTCFullYear();
+
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+
+    return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
+  };
+
     // Filter payment requests based on searchQuery, auditorium, and status
     const filteredRequests = paymentRequests.filter((request) => {
         return (
@@ -81,6 +100,7 @@ function ViewBookingStatus() {
                                 <th className="border p-2">Discount %</th>
                                 <th className="border p-2">Reject Reason</th>
                                 <th className="border p-2">Amount</th>
+                                <th className="border p-2">Status Update</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,10 +207,14 @@ function ViewBookingStatus() {
 
                                         </td>
                                         <td className="border p-2 font-semibold">
-                                            <span className={`px-2 py-1 rounded text-white ${request.booking_status === "approved" ? "bg-green-500" :
-                                                request.booking_status === "pending" ? "bg-yellow-500" :
-                                                    request.booking_status === "rejected" ? "bg-red-500" :
-                                                        request.booking_status === "confirmed" ? "bg-blue-500" : "bg-gray-500"}`}
+                                            <span
+                                                className={`px-2 py-1 rounded text-white 
+                                                    ${request.booking_status === "approved" ? "bg-green-500" :
+                                                        request.booking_status === "pending" ? "bg-yellow-500" :
+                                                            request.booking_status === "rejected" ? "bg-red-500" :
+                                                                request.booking_status === "cancelled" ? "bg-gray-500" :
+                                                                    request.booking_status === "confirm" ? "bg-blue-600" :
+                                                                        "bg-gray-500"}`}
                                             >
                                                 {request.booking_status.charAt(0).toUpperCase() + request.booking_status.slice(1)}
                                             </span>
@@ -198,6 +222,7 @@ function ViewBookingStatus() {
                                         <td className="border p-2">{request.approved_discount ? `${request.approved_discount}%` : "—"}</td>
                                         <td className="border p-2">{request.reject_reason || "—"}</td>
                                         <td className="border p-2">{request.discount_amount ? `₹${request.discount_amount}` : "—"}</td>
+                                        <td className="border p-2">{formatDateTime(request.updated_date)}</td>
                                     </tr>
                                 ))
                             )}
