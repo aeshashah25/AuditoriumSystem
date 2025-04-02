@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaBars } from "react-icons/fa";
 
-//import { CheckCircle } from "lucide-react";
 const DashboardContent = () => {
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalAuditoriums: 0,
+    maintenanceAuditoriums: 0,
+    totalUsers: 0,
     pendingRequests: 0,
+    approvedBeforePayment: 0,
     completedBookings: 0,
-    paymentRequests: 0
+    rejectBookings: 0,
+    cancelledBookings: 0,
+    totalFeedback: 0,
   });
 
   useEffect(() => {
@@ -22,92 +21,51 @@ const DashboardContent = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get("http://localhost:5002/api/dashboard-stats"); // Adjust API endpoint
+      const response = await axios.get("http://localhost:5002/api/dashboard-stats");
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
   };
 
-  const isTokenExpired = (token) => {
-    if (!token) return true;
-    const { exp } = JSON.parse(atob(token.split(".")[1]));
-    return exp < Math.floor(Date.now() / 1000);
-  };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("jwt_token");
-
-      if (!token || isTokenExpired(token)) {
-        localStorage.removeItem("jwt_token");
-        navigate("/");
-        return;
-      }
-
-      try {
-        const response = await axios.get("http://localhost:5000/api/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(response.data.user);
-      } catch (error) {
-        setError("Failed to fetch user data. Please log in again.");
-        localStorage.removeItem("jwt_token");
-        navigate("/");
-      }
-    };
-
-    fetchUser();
-    const intervalId = setInterval(() => {
-      if (isTokenExpired(localStorage.getItem("jwt_token"))) {
-        localStorage.removeItem("jwt_token");
-        setUser(null);
-        navigate("/");
-      }
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [navigate]);
-
-
   return (
     <div className="flex min-h-screen w-full bg-gray-100 justify-center items-start pt-5">
-      {/* Main Content */}
       <div className="flex flex-col w-full max-w-5xl p-5 bg-white shadow-lg">
-        {/* Dashboard Content */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Dashboard Overview</h2>
         <p className="text-gray-700">Manage all auditorium bookings and requests from here.</p>
 
-        {/* Responsive Cards for Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {/* Total Auditoriums - Blue */}
-          <div className="bg-blue-600 text-white p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold">Total Auditoriums</h3>
-            <p className="text-3xl mt-2">{stats.totalAuditoriums}</p>
-          </div>
+          {/* Dashboard Cards with Tooltips */}
+          {[
+            { label: "Total Auditoriums", value: stats.totalAuditoriums, color: "bg-indigo-600", tooltip: "Total number of auditoriums available" },
+            { label: "Under Maintenance Auditoriums", value: stats.maintenanceAuditoriums, color: "bg-yellow-500", tooltip: "Auditoriums currently under maintenance" },
+            { label: "Total Users", value: stats.totalUsers, color: "bg-blue-600", tooltip: "Total number of registered users" },
+            { label: "Pending Requests", value: stats.pendingRequests, color: "bg-orange-500", tooltip: "Total pending booking requests" },
+            { label: "Approved Requests", value: stats.approvedBeforePayment, color: "bg-green-400", tooltip: "Approved bookings awaiting payment" },
+            { label: "Rejected Requests", value: stats.rejectBookings, color: "bg-red-600", tooltip: "Total rejected booking requests by Admin" },
+            { label: "Cancelled Bookings", value: stats.cancelledBookings, color: "bg-gray-500", tooltip: "Bookings cancelled by users " },
+            { label: "Completed Bookings", value: stats.completedBookings, color: "bg-green-700", tooltip: "Bookings successfully completed after payment" },
+            { label: "Feedback", value: stats.totalFeedback, color: "bg-purple-600", tooltip: "Total feedback received from users" },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className={`${item.color} text-white p-6 rounded-lg shadow-lg text-center relative group`}
+            >
+              <h3 className="text-lg font-semibold">{item.label}</h3>
+              <p className="text-3xl mt-2">{item.value}</p>
+              {/* Tooltip */}
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform duration-200 bg-gray-900 text-white text-xs py-2 px-4 rounded-md shadow-lg opacity-90">
+                {item.tooltip}
+                {/* Tooltip Arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+              </div>
 
-          {/* Pending Requests - Orange */}
-          <div className="bg-orange-500 text-white p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold">Pending Requests</h3>
-            <p className="text-3xl mt-2">{stats.pendingRequests}</p>
-          </div>
-
-          {/* Payment Requests - Purple */}
-          <div className="bg-purple-600 text-white p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold">Payment Requests</h3>
-            <p className="text-3xl mt-2">{stats.paymentRequests}</p>
-          </div>
-
-          {/* Completed Bookings - Green */}
-          <div className="bg-green-500 text-white p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold">Completed Bookings</h3>
-            <p className="text-3xl mt-2">{stats.completedBookings}</p>
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
-
   );
 };
 
-export default DashboardContent; 
+export default DashboardContent;

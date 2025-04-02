@@ -313,6 +313,7 @@ app.put("/api/auditoriums/:id", upload.array("images", 5), async (req, res) => {
   }
 });
 
+//on HOMEPAGE
 app.get("/api/dashboard-counters", async (req, res) => {
   try {
     const result = await sql.query(`
@@ -364,23 +365,50 @@ app.put("/api/users/:id/status", async (req, res) => {
   }
 });
 
-//show Details on Dashboard Page ->Admin Side
+
+// Show Details on Dashboard Page -> Admin Side
 app.get("/api/dashboard-stats", async (req, res) => {
   try {
     // Query the database for each statistic
-    const totalAuditoriumsResult = await sql.query(`SELECT COUNT(*) AS totalAuditoriums FROM Auditoriums`);
-    const pendingRequestsResult = await sql.query(`SELECT COUNT(*) AS pendingRequests FROM Bookings WHERE booking_status = 'Pending'`);
-    const paymentRequestsResult = await sql.query(`SELECT COUNT(*) AS paymentRequests FROM Bookings WHERE booking_status = 'PaymentRequest'`);
-    const completedBookingsResult = await sql.query(`SELECT COUNT(*) AS completedBookings FROM Bookings WHERE booking_status = 'Completed'`);
-    const totalUsersResult = await sql.query(`SELECT COUNT(*) AS totalUsers FROM UsersDetails`);
+    const totalAuditoriumsResult = await sql.query(
+      `SELECT COUNT(*) AS totalAuditoriums FROM Auditoriums`
+    );
+    const maintenanceAuditoriumsResult = await sql.query(
+      `SELECT COUNT(*) AS maintenanceAuditoriums FROM Auditoriums WHERE is_deleted = 1`
+    );
+    const totalUsersResult = await sql.query(
+      `SELECT COUNT(*) AS totalUsers FROM UsersDetails`
+    );
+    const pendingRequestsResult = await sql.query(
+      `SELECT COUNT(*) AS pendingRequests FROM Bookings WHERE booking_status = 'Pending'`
+    );
+    const approvedBeforePaymentResult = await sql.query(
+      `SELECT COUNT(*) AS approvedBeforePayment FROM Bookings WHERE booking_status = 'approved'`
+    );
+    const completedBookingsResult = await sql.query(
+      `SELECT COUNT(*) AS completedBookings FROM Bookings WHERE booking_status = 'confirm'`
+    );
+    const rejectBookingsResult = await sql.query(
+      `SELECT COUNT(*) AS rejectBookings FROM Bookings WHERE booking_status = 'rejected'`
+    );
+    const cancelledBookingsResult = await sql.query(
+      `SELECT COUNT(*) AS cancelledBookings FROM Bookings WHERE booking_status = 'cancelled'`
+    );
+    const totalFeedbackResult = await sql.query(
+      `SELECT COUNT(*) AS totalFeedback FROM Feedback`
+    );
 
     // Extract values from query results
     const stats = {
       totalAuditoriums: totalAuditoriumsResult.recordset[0].totalAuditoriums,
-      pendingRequests: pendingRequestsResult.recordset[0].pendingRequests,
-      completedBookings: completedBookingsResult.recordset[0].completedBookings,
+      maintenanceAuditoriums: maintenanceAuditoriumsResult.recordset[0].maintenanceAuditoriums,
       totalUsers: totalUsersResult.recordset[0].totalUsers,
-      paymentRequests: paymentRequestsResult.recordset[0].paymentRequests
+      pendingRequests: pendingRequestsResult.recordset[0].pendingRequests,
+      approvedBeforePayment: approvedBeforePaymentResult.recordset[0].approvedBeforePayment,
+      completedBookings: completedBookingsResult.recordset[0].completedBookings,
+      rejectBookings: rejectBookingsResult.recordset[0].rejectBookings,
+      cancelledBookings: cancelledBookingsResult.recordset[0].cancelledBookings,
+      totalFeedback: totalFeedbackResult.recordset[0].totalFeedback,
     };
 
     res.json(stats);
@@ -389,6 +417,7 @@ app.get("/api/dashboard-stats", async (req, res) => {
     res.status(500).json({ message: "Error fetching stats" });
   }
 });
+
 
 // // 📌 GET all amenities from amenities table
 // app.get("/amenities", async (req, res) => {
