@@ -3,11 +3,7 @@ import express from "express";
 import sql from "mssql";
 import multer from "multer";
 import cors from "cors";
-import imageType from "image-type";
-import fs from "fs";
 import moment from "moment";
-import path from "path";
-import { fileURLToPath } from "url";
 
 
 // Load environment variables
@@ -48,6 +44,7 @@ const dbConfig = {
       limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB per file
   });
   
+  //create Auditorium
   app.post("/api/create-auditorium", upload.array("images", 5), async (req, res) => {
     console.log("Received Files:", req.files);
     console.log("Received Body:", req.body);
@@ -132,6 +129,7 @@ const dbConfig = {
 });
 
 
+//get All Auditorium excluding under maintance
 app.get("/api/auditoriums", async (req, res) => {
   try {
     const id = req.query.id ? parseInt(req.query.id, 10) : null; // Ensure `id` is a number
@@ -365,7 +363,6 @@ app.put("/api/users/:id/status", async (req, res) => {
   }
 });
 
-
 // Show Details on Dashboard Page -> Admin Side
 app.get("/api/dashboard-stats", async (req, res) => {
   try {
@@ -417,88 +414,6 @@ app.get("/api/dashboard-stats", async (req, res) => {
     res.status(500).json({ message: "Error fetching stats" });
   }
 });
-
-
-// // 📌 GET all amenities from amenities table
-// app.get("/amenities", async (req, res) => {
-//   try {
-//     if (!pool) {
-//       return res.status(500).json({ message: "Database connection not established" });
-//     }
-
-//     const result = await pool.request().query("SELECT * FROM amenities");
-//     res.json(result.recordset);
-//   } catch (error) {
-//     console.error("Error fetching amenities:", error);
-//     res.status(500).json({ message: "Error fetching amenities", error: error.message });
-//   }
-// });
-
-// // 📌 POST new amenity in amenities table
-// app.post("/api/amenities", async (req, res) => {
-//   const { name, price } = req.body;
-
-//   if (!name || price === "") {
-//     return res.status(400).json({ message: "Name and price are required" });
-//   }
-
-//   if (!pool) {
-//     return res.status(500).json({ message: "Database connection not established" });
-//   }
-
-//   try {
-//     await pool
-//       .request()
-//       .input("name", sql.VarChar, name)
-//       .input("price", sql.Decimal(10, 2), price)
-//       .execute("AddAmenity"); // Call the stored procedure
-
-//     res.json({ message: "✅ Amenity added successfully" });
-//   } catch (error) {
-//     console.error("❌ Database error:", error);
-//     res.status(500).json({ message: "Error adding amenity", error: error.message });
-//   }
-// });
-
-// //Update amentity
-// app.put("/api/amenities/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { name, price } = req.body;
-
-//   try {
-//     const pool = await sql.connect();
-//     const result = await pool
-//       .request()
-//       .input("id", sql.Int, id)
-//       .input("name", sql.NVarChar, name)
-//       .input("price", sql.Decimal(10, 2), price)
-//       .execute("UpdateAmenity");
-
-//     const response = result.recordset[0];
-//     res.json(response);
-//   } catch (error) {
-//     console.error("Error updating amenity:", error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
-
-// //Delete amentity
-// app.delete("/api/amenities/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const pool = await sql.connect();
-//     const result = await pool.request().input("id", sql.Int, id).execute("DeleteAmenity");
-
-//     const response = result.recordset[0];
-//     res.json(response);
-//   } catch (error) {
-//     console.error("Error deleting amenity:", error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
-
-
 
 // Start the server
 const port = 5002;

@@ -2,8 +2,6 @@ import sql from 'mssql';
 import express from 'express';
 import cors from 'cors';
 import nodemailer from "nodemailer";
-import moment from "moment";
-import cron from "node-cron";
 
 const router = express.Router();
 const app = express();
@@ -24,6 +22,7 @@ const poolPromise = new sql.ConnectionPool({
   }
 }).connect();
 
+//get auditorium time slot for booked like in Pending,approved,confirm
 app.get("/booked-slots/:auditoriumId", async (req, res) => {
   try {
     const { auditoriumId } = req.params;
@@ -83,17 +82,6 @@ app.get("/booked-slots/:auditoriumId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-// Helper function to format time from SQL (Date string)
-function formatTimeFromSQL(timeString) {
-  if (timeString instanceof Date || !isNaN(Date.parse(timeString))) {
-    const localTime = new Date(timeString);
-    const hours = localTime.getUTCHours();
-    const minutes = localTime.getUTCMinutes();
-    return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-  }
-  return 'N/A'; // Return 'N/A' if the time is not valid
-}
 
 // Route for booking the auditorium
 app.post('/book-auditorium', async (req, res) => {
@@ -388,7 +376,7 @@ async function sendCancellationEmail(username, email, bookingId, auditoriumName,
   await transporter.sendMail(mailOptions);
 }
 
-
+//update status of payment in DB
 app.post("/make-payment/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
 
@@ -513,8 +501,6 @@ app.get('/admin/view-booking-status', async (req, res) => {
   }
 });
 
-
-
 // Fetch bookings for a specific user
 app.get("/user/bookings/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -578,23 +564,6 @@ app.get('/admin/completed-events', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-// Run every minute to update expired bookings 
-// cron.schedule('* * * * *', async () => {
-//   try {
-//     const pool = await poolPromise;
-//     await pool.request().query(`
-//       UPDATE bookings
-//       SET event_status = 'Complete'
-//       WHERE (date < CAST(GETDATE() AS DATE))
-//          OR (date = CAST(GETDATE() AS DATE) AND end_time < CAST(GETDATE() AS TIME));
-//     `);
-//     console.log("✅ Booking statuses updated automatically");
-//   } catch (error) {
-//     console.error("❌ Error updating booking statuses:", error);
-//   }
-// });
-
 
 // ✅ Start the server
 const PORT = 5001;

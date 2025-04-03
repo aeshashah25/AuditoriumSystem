@@ -205,9 +205,7 @@ app.post("/api/verify-otp", async (req, res) => {
   res.status(201).json({ message: "User registered successfully." });
 });
 
-
-
-
+//check already registered email and phone
 app.post("/api/check-existence", async (req, res) => {
   const { email, phone } = req.body;
 
@@ -358,6 +356,7 @@ app.put("/api/user/update", verifyToken, upload.single("profilePic"), async (req
   }
 });
 
+//for get profile pic
 app.get('/api/user/profile-pic/:userId', verifyToken, async (req, res) => {
   const { userId } = req.params;
 
@@ -380,7 +379,6 @@ app.get('/api/user/profile-pic/:userId', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Error fetching profile picture', error: error.message });
   }
 });
-
 
 // Step 1: Send Reset OTP
 app.post("/api/send-reset-otp", async (req, res) => {
