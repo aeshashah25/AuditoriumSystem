@@ -318,7 +318,7 @@ app.get("/api/dashboard-counters", async (req, res) => {
       SELECT 
         (SELECT COUNT(*) FROM UsersDetails) AS totalUsers,
         (SELECT COUNT(*) FROM auditoriums) AS totalAuditoriums,
-        (SELECT COUNT(*) FROM bookings where booking_status='Complete') AS totalEvents,
+        (SELECT COUNT(*) FROM bookings where booking_status='confirm') AS totalEvents,
         (SELECT COUNT(*) FROM Bookings) AS totalBookings
     `);
 

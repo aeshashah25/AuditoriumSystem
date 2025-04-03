@@ -468,6 +468,33 @@ app.get('/admin/view-payment-status', async (req, res) => {
   }
 });
 
+//admin View Feedback
+app.get('/admin/view-feedback', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const query = `
+      SELECT 
+        f.id AS id, 
+        ud.name AS user_name, 
+        ud.email AS user_email,
+        a.name AS auditorium_name,
+		f.feedbackText,
+		f.createdAt
+      FROM Feedback f
+      INNER JOIN UsersDetails ud ON f.UserId = ud.id
+      INNER JOIN Auditoriums a ON f.AuditoriumId = a.id;
+    `;
+
+    const result = await pool.request().query(query);
+
+    res.json(result.recordset); // ✅ Send formatted JSON response
+    
+  } catch (error) {
+    console.error('Error fetching booking requests:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 //admin View Booking Status
 app.get('/admin/view-booking-status', async (req, res) => {
   try {

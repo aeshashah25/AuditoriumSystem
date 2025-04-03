@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Routes, Route, Link } from "react-router-dom";
 import { FaHome, FaEye, FaUser, FaSignOutAlt, FaClipboardList, FaBars, FaTimes, FaTachometerAlt } from "react-icons/fa";
-import { MdPayments, MdEvent } from "react-icons/md";
+import { MdPayments, MdEvent,MdFeedback } from "react-icons/md";
 import { BsFillBookmarkCheckFill } from "react-icons/bs";
 import DashboardContent from "./DashboardContent";
 import CreateAuditorium from "../admin/CreateAuditoriums";
@@ -11,7 +11,8 @@ import ViewUser from "../admin/ViewUser";
 import ViewBookingRequests from "../admin/ViewBookingRequests";
 import ViewBookingStatus from "../admin/ViewBookingStatus";
 import ViewPaymentStatus from "../admin/ViewPaymentStatus";
-import ViewEventStatus from "../admin/ViewEventStatus";
+// import ViewEventStatus from "../admin/ViewEventStatus";
+import ViewFeedback from "../admin/ViewFeedbacks";
 
 const DashBoard = () => {
   const [user, setUser] = useState(null);
@@ -63,7 +64,8 @@ const DashBoard = () => {
           <Link to="/DashBoard/view-booking-requests" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><FaClipboardList className="mr-2" /> View Booking Requests</Link>
           <Link to="/DashBoard/view-booking-status" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><BsFillBookmarkCheckFill className="mr-2" /> View Booking Status</Link>
           <Link to="/DashBoard/view-payment-status" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><MdPayments className="mr-2" /> View Payment Status</Link>
-          <Link to="/DashBoard/view-event-status" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><MdEvent className="mr-2" /> View Event Status</Link>
+          {/* <Link to="/DashBoard/view-event-status" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><MdEvent className="mr-2" /> View Event Status</Link> */}
+          <Link to="/DashBoard/view-feedback" className="flex items-center px-4 py-2 rounded-lg hover:bg-gray-800 transition"><MdFeedback className="mr-2" /> View Feedback</Link>
         </nav>
       </div>
 
@@ -108,7 +110,8 @@ const DashBoard = () => {
             <Route path="view-booking-requests" element={<ViewBookingRequests />} />
             <Route path="view-booking-status" element={<ViewBookingStatus />} />
             <Route path="view-payment-status" element={<ViewPaymentStatus />} />
-            <Route path="view-event-status" element={<ViewEventStatus />} />
+            {/* <Route path="view-event-status" element={<ViewEventStatus />} /> */}
+            <Route path="view-feedback" element={<ViewFeedback />} />
           </Routes>
         </div>
       </div>
