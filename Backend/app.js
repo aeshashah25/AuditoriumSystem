@@ -485,7 +485,7 @@ app.post("/api/feedback", async (req, res) => {
       .input("feedbackText", sql.NVarChar, feedback)
       .execute("InsertFeedback");
 
-    console.log("Feedback saved successfully!", result);
+    //console.log("Feedback saved successfully!", result);
     res.status(201).json({ message: "Feedback submitted successfully!" });
   } catch (err) {
     console.error("Database error:", err);
@@ -542,31 +542,6 @@ app.get("/api/user/avatar/:userId", async (req, res) => {
   }
 });
 
-//  GET: Fetch all feedback for an auditorium
-app.get("/api/feedback/:auditoriumId", async (req, res) => {
-  let { auditoriumId } = req.params;
-
-  if (isNaN(auditoriumId)) {
-    return res.status(400).json({ message: "Invalid auditorium ID" });
-  }
-
-  try {
-    const pool = await sql.connect(dbConfig);
-
-    const result = await pool.request()
-      .input("auditoriumId", sql.Int, parseInt(auditoriumId, 10))
-      .query("SELECT * FROM Feedback WHERE auditoriumId = @auditoriumId");
-
-    if (result.recordset.length > 0) {
-      res.status(200).json(result.recordset);
-    } else {
-      res.status(404).json({ message: "No feedback found for this auditorium." });
-    }
-  } catch (err) {
-    console.error("Error fetching feedback:", err);
-    res.status(500).json({ message: "Failed to fetch feedback", error: err.message });
-  }
-});
 
 // Protected Route: Get user info
 app.get("/api/me", verifyToken, async (req, res) => {

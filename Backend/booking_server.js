@@ -22,6 +22,44 @@ const poolPromise = new sql.ConnectionPool({
   }
 }).connect();
 
+
+// GET: Fetch all feedback for an auditorium
+app.get("/api/feedback/:auditoriumId", async (req, res) => {
+  let { auditoriumId } = req.params;
+
+  if (isNaN(auditoriumId)) {
+    return res.status(400).json({ message: "Invalid auditorium ID" });
+  }
+
+  try {
+    const pool = await poolPromise; // Ensure connection is awaited
+    const result = await pool  // 🔹 Store query result in 'result' variable
+      .request()
+      .input("auditoriumId", sql.Int, parseInt(auditoriumId, 10))
+      .query(`SELECT 
+              f.id AS id,
+                  ud.name AS user_name,
+                  ud.email AS user_email,
+                  f.feedbackText,
+                  f.createdAt,
+                  f.is_visible
+          FROM Feedback f
+          INNER JOIN UsersDetails ud ON f.UserId = ud.id
+          WHERE f.auditoriumId = @auditoriumId
+          AND f.is_visible = 0`);
+
+    if (result.recordset.length > 0) {
+      res.status(200).json(result.recordset);
+    } else {
+      res.status(404).json({ message: "No feedback found for this auditorium." });
+    }
+  } catch (err) {
+    console.error("Error fetching feedback:", err);
+    res.status(500).json({ message: "Failed to fetch feedback", error: err.message });
+  }
+});
+
+
 //get auditorium time slot for booked like in Pending,approved,confirm
 app.get("/booked-slots/:auditoriumId", async (req, res) => {
   try {

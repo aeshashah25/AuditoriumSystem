@@ -335,6 +335,9 @@ function BookAuditorium() {
               />
 
               <label className="block text-gray-700 font-semibold mb-1">Select Amenities:</label>
+              <p className="text-sm text-gray-700 italic bg-yellow-100 p-2 rounded-md">
+                    Amenities are charged for the full booking duration, not on an hourly basis.
+              </p>
               <div className="grid grid-cols-1 gap-3 mt-2">
                 {auditorium.amenities.map((amenity, index) => (
                   <label key={index} className="flex items-center space-x-2 bg-white p-3 rounded-md border">
@@ -347,6 +350,7 @@ function BookAuditorium() {
                     <span>{amenity.name} (+₹{amenity.cost})</span>
                   </label>
                 ))}
+                
               </div>
 
               <h2 className="text-xl font-bold mt-6 text-gray-800">Total Cost: ₹{totalPrice}</h2>

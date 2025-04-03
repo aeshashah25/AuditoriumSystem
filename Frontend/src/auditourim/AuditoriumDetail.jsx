@@ -7,13 +7,14 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import BookAuditorium from "./BookAuditorium";
-import FixedLayout from '../components/FixedLayout';
+import FixedLayout from "../components/FixedLayout";
 
 function AuditoriumDetail() {
   const { id } = useParams();
-  const [auditorium, setAuditorium] = useState(null);
   const navigate = useNavigate();
+  const [auditorium, setAuditorium] = useState(null);
   const [showBooking, setShowBooking] = useState(false);
+  const [feedback, setFeedback] = useState([]);
 
   useEffect(() => {
     fetch(`http://localhost:5002/api/auditoriums?id=${id}`)
@@ -29,103 +30,100 @@ function AuditoriumDetail() {
         }
       })
       .catch((error) => console.error("Error fetching auditorium:", error));
+
+    // Fetch feedback data
+    fetch(`http://localhost:5001/api/feedback/${id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setFeedback(data);
+        } else {
+          setFeedback([]);
+        }
+      })
+      .catch((error) => console.error("Error fetching feedback:", error));
   }, [id]);
 
   const formatTime = (timeString) => {
-    if (!timeString) return "Not Available";
-    return timeString.substring(11, 16);
+    return timeString ? timeString.substring(11, 16) : "Not Available";
   };
 
   if (!auditorium) return <p>Loading details...</p>;
 
   return (
-    <>
-      <div className="bg-gray-100">
-        <FixedLayout>
+    <div className="bg-gray-100">
+      <FixedLayout>
+        <div className="min-h-screen flex flex-col lg:flex-row items-start justify-center gap-6 lg:mb-10 relative">
+          {/* Feedback Section */}
+          <div className="w-full max-w-md lg:w-1/3 bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+            <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">📝 User Feedback</h2>
+            {feedback.length > 0 ? (
+              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                {feedback.map((item) => (
+                  <div key={item.id} className="bg-gray-100 p-4 rounded-lg border">
+                    <p className="font-semibold text-gray-800">{item.user_name}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(item.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
 
-          {/* Back Button */}
-          {/* <button
-            onClick={() => navigate(-1)}
-            className="absolute top-28 left-4 bg-brown hover:bg-brown-light text-white p-2 rounded-md shadow-md transition-transform transform hover:scale-105"
-          >
-            Back
-          </button> */}
-
-          <div
-            className={`min-h-screen flex items-center justify-center lg:mb-10 relative transition-all ${showBooking ? 'blur-sm' : ''}`}
-          >
-            {/* Auditorium Details */}
-            <div className="w-full max-w-screen-lg md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-lg p-6 relative transition-all border border-gray-200">
-              <div className="flex items-center justify-between w-full px-4">
-                {/* Title */}
-                <h1 className="text-3xl font-bold text-center flex-grow text-gray-800 tracking-wide">
-                  {auditorium.name}
-                </h1>
+                    <p className="mt-2 text-gray-700">{item.feedbackText}</p>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <p className="text-center text-gray-600 italic">No feedback available.</p>
+            )}
+          </div>
+
+          {/* Auditorium Details */}
+          <div className="w-full max-w-screen-lg lg:w-2/3 ">
+            <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200">
+              <h1 className="text-3xl font-bold text-center flex-grow text-gray-800 tracking-wide">{auditorium.name}</h1>
 
               {/* Image Slider */}
               <div className="mt-6">
                 {auditorium.images.length > 0 ? (
-                  <Swiper
-                    modules={[Navigation, Pagination]}
-                    navigation
-                    pagination={{ clickable: true }}
-                    spaceBetween={10}
-                    slidesPerView={1}
-                    className="rounded-lg overflow-hidden"
-                  >
+                  <Swiper modules={[Navigation, Pagination]} navigation pagination={{ clickable: true }} spaceBetween={10} slidesPerView={1} className="rounded-lg overflow-hidden">
                     {auditorium.images.map((image, index) => (
                       <SwiperSlide key={index}>
-                        <img
-                          src={image}
-                          alt={`Auditorium-${index + 1}`}
-                          className="w-full object-cover rounded-lg h-[250px] md:h-[300px] lg:h-[350px]"
-                        />
+                        <img src={image} alt={`Auditorium-${index + 1}`} className="w-full object-cover rounded-lg h-[300px]" />
                       </SwiperSlide>
                     ))}
                   </Swiper>
                 ) : (
-                  <img
-                    src="default-image.jpg"
-                    alt="Default Auditorium"
-                    className="w-full object-cover rounded-lg h-[250px] md:h-[300px] lg:h-[350px]"
-                  />
+                  <img src="default-image.jpg" alt="Default Auditorium" className="w-full object-cover rounded-lg h-[300px]" />
                 )}
               </div>
 
               {/* Details Section */}
               <div className="mt-4 space-y-4 text-gray-700 text-lg bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                {/* 📌 Auditorium Description */}
-                <p className="text-center italic text-gray-600">
-                  {auditorium.description || "No description available."}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-lg bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                  {/* 📍 Location - Full Row */}
-                  <div className="col-span-1 sm:col-span-2 flex items-center space-x-3 text-gray-700">
-                    <span className="text-2xl text-brown">📍</span>
-                    <p><strong>Location:</strong> {auditorium.location}</p>
-                  </div>
-
-                  {/* ⏰ Start Time & ⏳ End Time */}
-                  <div className="flex items-center space-x-3 text-gray-700">
-                    <span className="text-2xl text-brown">⏰</span>
-                    <p><strong>Open Time:</strong> {auditorium.start_time}</p>
-                  </div>
-                  <div className="flex items-center space-x-3 text-gray-700">
-                    <span className="text-2xl text-brown">⏳</span>
-                    <p><strong>Close Time:</strong> {auditorium.end_time}</p>
-                  </div>
-
-                  {/* 👥 Capacity & 💰 Price per Hour */}
-                  <div className="flex items-center space-x-3 text-gray-700">
-                    <span className="text-2xl text-brown">👥</span>
-                    <p><strong>Capacity:</strong> {auditorium.capacity} people</p>
-                  </div>
-                  <div className="flex items-center space-x-3 text-gray-700">
-                    <span className="text-2xl text-brown">💰</span>
-                    <p><strong>Price per Hour:</strong> ₹{auditorium.price_per_hour}</p>
-                  </div>
+                <p className="text-center italic text-gray-600">{auditorium.description || "No description available."}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* First Row - Location (spans both columns) */}
+                  <p className="sm:col-span-2"><strong>📍 Location:</strong> {auditorium.location}</p>
+                  {/* Second Row - Open Time & Close Time */}
+                  <p><strong>⏰ Open Time:</strong> {auditorium.start_time}</p>
+                  <p><strong>⏳ Close Time:</strong> {auditorium.end_time}</p>
+                  {/* Third Row - Price per Hour & Capacity */}
+                  <p><strong>💰 Price per Hour:</strong> ₹{auditorium.price_per_hour}</p>
+                  <p><strong>👥 Capacity:</strong> {auditorium.capacity} people</p>
+                  {/* Fourth Row - Amenities (spans both columns) */}
+                  <p className="sm:col-span-2"><strong>🏢 Amenities:</strong></p>
+                  <ul className="list-disc list-inside">
+                    {auditorium.amenities?.length > 0 ? (
+                      auditorium.amenities.map((amenity, index) => (
+                        <li key={index}>
+                          {amenity.name} - {amenity.cost === "0" ? "(Free)" : `₹${amenity.cost}`}
+                        </li>
+                      ))
+                    ) : (
+                      <li>No amenities available</li>
+                    )}
+                  </ul>
                 </div>
               </div>
 
@@ -140,30 +138,24 @@ function AuditoriumDetail() {
                 Book Auditorium
               </button>
             </div>
-
-            {/* Sliding Book Auditorium Panel */}
-            {showBooking && (
-              <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ duration: 0.5 }}
-                className="fixed top-0 right-0 h-full w-full md:w-[50%] lg:w-[40%] bg-white shadow-xl p-6 overflow-y-auto z-50 border-l-4 border-brown"
-              >
-                <button
-                  onClick={() => setShowBooking(false)}
-                  className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded-md transition-transform transform hover:scale-110"
-                >
-                  ❌ Close
-                </button>
-                <BookAuditorium auditorium={auditorium} setFlip={setShowBooking} />
-              </motion.div>
-            )}
           </div>
 
-        </FixedLayout >
-      </div>
-    </>
+          {/* Booking Panel */}
+          {showBooking && (
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.5 }}
+              className="fixed top-0 right-0 h-full w-full md:w-[50%] lg:w-[40%] bg-white shadow-xl p-6 overflow-y-auto z-50 border-l-4 border-brown"
+            >
+              <button onClick={() => setShowBooking(false)} className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded-md transition-transform transform hover:scale-110">❌ Close</button>
+              <BookAuditorium auditorium={auditorium} setFlip={setShowBooking} />
+            </motion.div>
+          )}
+        </div>
+      </FixedLayout>
+    </div>
   );
 }
 
