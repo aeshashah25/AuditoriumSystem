@@ -34,7 +34,7 @@ app.get("/booked-slots/:auditoriumId", async (req, res) => {
       SELECT Dates
       FROM bookings 
       WHERE AuditoriumID = @auditoriumId 
-      AND booking_status IN ('pending', 'approved')
+      AND booking_status IN ('pending', 'approved','confirm')
     `;
 
     const result = await pool.request()
@@ -124,45 +124,6 @@ app.post('/book-auditorium', async (req, res) => {
   } catch (err) {
     console.error("❌ Error inserting booking:", err); // Debugging Step 2
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
-  }
-});
-
-// ✅ Get booked slots for an auditorium
-app.get('/booked-slots/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pool = await poolPromise;
-
-    const result = await pool.request()
-      .input('AuditoriumId', sql.Int, id)
-      .query(`
-        SELECT dates, booking_status 
-        FROM bookings 
-        WHERE auditorium_id = @AuditoriumId 
-          AND booking_status IN ('pending', 'approved') 
-      `);
-
-    let bookedSlots = {};
-
-    result.recordset.forEach((booking) => {
-      const bookingDates = JSON.parse(booking.dates);
-      bookingDates.forEach(({ date, time_slots }) => {
-        if (!bookedSlots[date]) {
-          bookedSlots[date] = new Set();
-        }
-        time_slots.forEach(slot => bookedSlots[date].add(slot));
-      });
-    });
-
-    // Convert sets back to arrays for JSON response
-    Object.keys(bookedSlots).forEach(date => {
-      bookedSlots[date] = Array.from(bookedSlots[date]);
-    });
-
-    res.status(200).json(bookedSlots);
-  } catch (err) {
-    console.error("❌ Error fetching booked slots:", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 });
 
