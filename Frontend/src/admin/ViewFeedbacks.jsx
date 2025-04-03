@@ -2,48 +2,61 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function ViewFeedbacks() {
-    const [paymentRequests, setPaymentRequests] = useState([]);
+    const [Feedback, setFeedback] = useState([]); // Ensure it's always an array
     const [searchQuery, setSearchQuery] = useState("");
     const [filterAuditorium, setFilterAuditorium] = useState("");
     const [filterStatus, setFilterStatus] = useState(""); // New filter for status
 
+    // Fetch Feedbacks
     useEffect(() => {
-        axios.get("http://localhost:5001/admin/view-feedback")
-            .then((response) => {
-                setPaymentRequests(response.data);
-            })
-            .catch((error) => console.error("Error fetching payment requests:", error));
+        fetchFeedbacks();
     }, []);
 
-    // for format date and time
+    const fetchFeedbacks = async () => {
+        try {
+            const response = await axios.get("http://localhost:5001/admin/view-feedback");
+            setFeedback(response.data || []); // Ensure empty array if no data
+        } catch (error) {
+            console.error("Error fetching feedbacks:", error);
+            setFeedback([]); // Prevent undefined state
+        }
+    };
+
+    // Format Date and Time
     const formatDateTime = (isoString) => {
-        if (!isoString) return "N/A"; // Handle empty values
-
+        if (!isoString) return "N/A"; 
         const date = new Date(isoString);
-
-        // Extract UTC parts manually
         const day = date.getUTCDate();
         const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
         const year = date.getUTCFullYear();
-
         let hours = date.getUTCHours();
         const minutes = date.getUTCMinutes().toString().padStart(2, "0");
         const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
-
+        hours = hours % 12 || 12; 
         return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
     };
 
-    // Filter payment requests based on searchQuery, auditorium, and status
-    const filteredRequests = paymentRequests.filter((request) => {
+    // Filter Feedbacks
+    const filteredRequests = (Feedback || []).filter((request) => {
         return (
             (searchQuery === "" ||
-                request.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                request.auditorium_name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+                request.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                request.auditorium_name?.toLowerCase().includes(searchQuery.toLowerCase())) &&
             (filterAuditorium === "" || request.auditorium_name === filterAuditorium) &&
-            (filterStatus === "" || request.payment_status === filterStatus)
+            (filterStatus === "" || request.is_visible.toString() === filterStatus)
         );
     });
+
+    // Toggle Feedback Visibility
+    const handleToggleStatus = async (feedbackId, currentStatus) => {
+        const newStatus = Number(currentStatus) === 1 ? 0 : 1;
+        try {
+            await axios.put(`http://localhost:5001/api/feedback/${feedbackId}/status`, { is_visible: newStatus });
+            fetchFeedbacks(); // Refresh data after update
+        } catch (error) {
+            console.error("Error updating feedback visibility:", error);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
@@ -67,7 +80,7 @@ function ViewFeedbacks() {
                         className="px-4 py-2 border rounded-md w-full sm:w-1/3"
                     >
                         <option value="">All Auditoriums</option>
-                        {[...new Set(paymentRequests.map((request) => request.auditorium_name))].map(
+                        {[...new Set(Feedback.map((request) => request.auditorium_name))].map(
                             (auditorium) => (
                                 <option key={auditorium} value={auditorium}>
                                     {auditorium}
@@ -75,7 +88,6 @@ function ViewFeedbacks() {
                             )
                         )}
                     </select>
-
                 </div>
 
                 {/* Table */}
@@ -88,20 +100,23 @@ function ViewFeedbacks() {
                                 <th className="border p-2">Auditorium</th>
                                 <th className="border p-2">Feedback</th>
                                 <th className="border p-2">Feedback Date</th>
+                                <th className="border p-2">Status</th>
+                                <th className="border p-2">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredRequests.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="text-center p-4 text-gray-500">
-                                        No payment requests found.
+                                    <td colSpan="7" className="text-center p-4 text-gray-500">
+                                        No feedbacks found.
                                     </td>
                                 </tr>
                             ) : (
                                 filteredRequests.map((request, index) => (
                                     <tr key={index} className="text-center border-b">
                                         <td className="border p-2">{index + 1}</td>
-                                        <td className="border p-2">{request.user_name}
+                                        <td className="border p-2">
+                                            {request.user_name}
                                             <br />
                                             <span className="text-xs text-gray-500 break-words">
                                                 {request.user_email}
@@ -110,6 +125,22 @@ function ViewFeedbacks() {
                                         <td className="border p-2">{request.auditorium_name}</td>
                                         <td className="border p-2">{request.feedbackText}</td>
                                         <td className="border p-2">{formatDateTime(request.createdAt)}</td>
+                                        <td className={`border p-2 font-semibold ${request.is_visible ? "text-red-600" : "text-green-600"}`}>
+                                            {request.is_visible ? "Unshow" : "Show"}
+                                        </td>
+
+                                        <td className="border p-2 font-semibold">
+                                            <button
+                                                onClick={() => handleToggleStatus(request.id, request.is_visible)}
+                                                className={`px-3 py-1 rounded-md transition text-xs sm:text-sm ${
+                                                    request.is_visible
+                                                        ? "bg-green-600 text-white hover:bg-green-500"
+                                                        : "bg-red-600 text-white hover:bg-red-500"
+                                                }`}
+                                            >
+                                                {request.is_visible ? "Show" : "Unshow"}
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             )}

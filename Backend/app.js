@@ -465,10 +465,9 @@ app.post("/api/reset-password", async (req, res) => {
   }
 });
 
-
-//Feedback
+//User five feedback and stored in DB
 app.post("/api/feedback", async (req, res) => {
-  console.log("Incoming feedback data:", req.body);
+  //console.log("Incoming feedback data:", req.body);
 
   const { auditoriumId, userId, feedback } = req.body;
 
@@ -508,7 +507,8 @@ app.get("/api/feedback", async (req, res) => {
          FROM Feedback F
          JOIN UsersDetails U ON F.userId = U.id
          JOIN Auditoriums A ON F.auditoriumId = A.id
-         ORDER BY F.createdAt DESC`
+         WHERE F.is_visible <> 1   -- Fetch only feedback where is_visible is NOT 1
+         ORDER BY F.createdAt DESC `
       );
 
     res.json(result.recordset);

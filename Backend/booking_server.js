@@ -461,7 +461,7 @@ app.get('/admin/view-payment-status', async (req, res) => {
     const result = await pool.request().query(query);
 
     res.json(result.recordset); // ✅ Send formatted JSON response
-    
+
   } catch (error) {
     console.error('Error fetching booking requests:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -473,25 +473,46 @@ app.get('/admin/view-feedback', async (req, res) => {
   try {
     const pool = await poolPromise;
     const query = `
-      SELECT 
-        f.id AS id, 
-        ud.name AS user_name, 
-        ud.email AS user_email,
-        a.name AS auditorium_name,
-		f.feedbackText,
-		f.createdAt
-      FROM Feedback f
-      INNER JOIN UsersDetails ud ON f.UserId = ud.id
-      INNER JOIN Auditoriums a ON f.AuditoriumId = a.id;
+              SELECT 
+                f.id AS id, 
+                ud.name AS user_name, 
+                ud.email AS user_email,
+                a.name AS auditorium_name,
+            f.feedbackText,
+            f.createdAt,
+            f.is_visible
+        FROM Feedback f
+        INNER JOIN UsersDetails ud ON f.UserId = ud.id
+        INNER JOIN Auditoriums a ON f.AuditoriumId = a.id;
     `;
 
     const result = await pool.request().query(query);
 
     res.json(result.recordset); // ✅ Send formatted JSON response
-    
+
   } catch (error) {
     console.error('Error fetching booking requests:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//set Feedback show and unshow on HOmePage
+app.put("/api/feedback/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { is_visible } = req.body;
+
+  try {
+    const pool = await poolPromise; // Ensure you await poolPromise
+    await pool
+      .request()
+      .input("id", sql.Int, id)
+      .input("is_visible", sql.TinyInt, is_visible) // Ensure TinyInt (0 or 1)
+      .query("UPDATE Feedback SET is_visible = @is_visible WHERE id = @id");
+
+    res.status(200).json({ message: "Feedback visibility updated successfully" });
+  } catch (error) {
+    console.error("Database update error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
