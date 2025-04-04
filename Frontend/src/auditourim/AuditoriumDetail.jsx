@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { motion } from "framer-motion";
+import { Edit, Trash2 } from "lucide-react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -15,8 +16,21 @@ function AuditoriumDetail() {
   const [auditorium, setAuditorium] = useState(null);
   const [showBooking, setShowBooking] = useState(false);
   const [feedback, setFeedback] = useState([]);
+  const [loggedInUserID, setLoggedInUserID] = useState(null); // Store logged-in user ID
+
 
   useEffect(() => {
+
+    //fetch UserID
+    const storedUserID = localStorage.getItem("user_id");
+    //console.log(`Logged-in User ID: ${storedUserID}`);
+    if (!storedUserID) {
+      alert("User not logged in. Please log in first!");
+      return;
+    }
+    setLoggedInUserID(storedUserID); // Store user ID in state
+
+    //fetch auditorium Details
     fetch(`http://localhost:5002/api/auditoriums?id=${id}`)
       .then((response) => response.json())
       .then((data) => {
@@ -48,6 +62,37 @@ function AuditoriumDetail() {
     return timeString ? timeString.substring(11, 16) : "Not Available";
   };
 
+  const handleEdit = (feedbackID) => {
+    console.log("Edit Feedback:", feedbackID);
+    // Implement edit functionality
+  };
+
+  const handleDelete = async (feedbackID) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this feedback?");
+    if (!confirmDelete) return; // Exit if user cancels
+  
+    //console.log("Deleting Feedback:", feedbackID);
+  
+    try {
+      const response = await fetch(`http://localhost:5001/api/feedback/delete/${feedbackID}`, {
+        method: "DELETE",
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Feedback deleted successfully!");
+        setFeedback(feedback.filter((item) => item.id !== feedbackID)); // Update state
+      } else {
+        alert(data.message || "Failed to delete feedback");
+      }
+    } catch (error) {
+      console.error("Error deleting feedback:", error);
+      alert("Error deleting feedback");
+    }
+  };
+  
+
   if (!auditorium) return <p>Loading details...</p>;
 
   return (
@@ -55,12 +100,13 @@ function AuditoriumDetail() {
       <FixedLayout>
         <div className="min-h-screen flex flex-col lg:flex-row items-start justify-center gap-6 lg:mb-10 relative">
           {/* Feedback Section */}
-          <div className="w-full max-w-md lg:w-1/3 bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+          <div className="w-full max-w-md lg:w-1/3 bg-white shadow-lg rounded-lg p-6 border border-gray-200 order-2 lg:order-1">
             <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">📝 User Feedback</h2>
             {feedback.length > 0 ? (
+
               <div className="space-y-4 max-h-[500px] overflow-y-auto">
                 {feedback.map((item) => (
-                  <div key={item.id} className="bg-gray-100 p-4 rounded-lg border">
+                  <div key={item.id} className="bg-gray-100 p-4 rounded-lg border relative">
                     <p className="font-semibold text-gray-800">{item.user_name}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(item.createdAt).toLocaleDateString("en-GB", {
@@ -69,18 +115,38 @@ function AuditoriumDetail() {
                         year: "numeric",
                       })}
                     </p>
-
+                    
                     <p className="mt-2 text-gray-700">{item.feedbackText}</p>
+
+                    {/* Show Edit/Delete buttons only if the logged-in user matches feedback's UserID */}
+                    {String(loggedInUserID) === String(item.userId) && (
+                      <div className="absolute top-2 right-2 flex space-x-2">
+                        <button
+                          className="text-blue-500 hover:text-blue-700"
+                          onClick={() => handleEdit(item.id)}
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    )}
+
                   </div>
                 ))}
               </div>
+
             ) : (
               <p className="text-center text-gray-600 italic">No feedback available.</p>
             )}
           </div>
 
           {/* Auditorium Details */}
-          <div className="w-full max-w-screen-lg lg:w-2/3 ">
+          <div className="w-full max-w-screen-lg lg:w-2/3 order-1 lg:order-2">
             <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200">
               <h1 className="text-3xl font-bold text-center flex-grow text-gray-800 tracking-wide">{auditorium.name}</h1>
 

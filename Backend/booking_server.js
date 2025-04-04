@@ -38,11 +38,12 @@ app.get("/api/feedback/:auditoriumId", async (req, res) => {
       .input("auditoriumId", sql.Int, parseInt(auditoriumId, 10))
       .query(`SELECT 
               f.id AS id,
-                  ud.name AS user_name,
-                  ud.email AS user_email,
-                  f.feedbackText,
-                  f.createdAt,
-                  f.is_visible
+              f.userId,
+              ud.name AS user_name,
+              ud.email AS user_email,
+              f.feedbackText,
+              f.createdAt,
+              f.is_visible
           FROM Feedback f
           INNER JOIN UsersDetails ud ON f.UserId = ud.id
           WHERE f.auditoriumId = @auditoriumId
@@ -59,6 +60,32 @@ app.get("/api/feedback/:auditoriumId", async (req, res) => {
   }
 });
 
+// DELETE Feedback API
+app.delete("/api/feedback/delete/:id", async (req, res) => {
+  const { id } = req.params; // Get feedback ID from URL
+
+  try {
+    const pool = await poolPromise; // Ensure poolPromise is correctly set up in dbConfig.js
+
+    // Check if feedback exists
+    const checkFeedback = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .query("SELECT * FROM feedback WHERE id = @id");
+
+    if (checkFeedback.recordset.length === 0) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    // Delete feedback
+    await pool.request().input("id", sql.Int, id).query("DELETE FROM feedback WHERE id = @id");
+
+    res.status(200).json({ message: "Feedback deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 //get auditorium time slot for booked like in Pending,approved,confirm
 app.get("/booked-slots/:auditoriumId", async (req, res) => {

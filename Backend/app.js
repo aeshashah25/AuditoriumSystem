@@ -465,7 +465,7 @@ app.post("/api/reset-password", async (req, res) => {
   }
 });
 
-//User five feedback and stored in DB
+//User give feedback and stored in DB
 app.post("/api/feedback", async (req, res) => {
   //console.log("Incoming feedback data:", req.body);
 
