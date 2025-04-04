@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useModal } from "../components/ModalContext";
 
 function ViewFeedbacks() {
-    const [Feedback, setFeedback] = useState([]); // Ensure it's always an array
+    const [Feedback, setFeedback] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterAuditorium, setFilterAuditorium] = useState("");
-    const [filterStatus, setFilterStatus] = useState(""); // New filter for status
+    const [filterStatus, setFilterStatus] = useState("");
+    const { showModal, showConfirmationModal } = useModal();
 
-    // Fetch Feedbacks
     useEffect(() => {
         fetchFeedbacks();
     }, []);
@@ -15,14 +16,13 @@ function ViewFeedbacks() {
     const fetchFeedbacks = async () => {
         try {
             const response = await axios.get("http://localhost:5001/admin/view-feedback");
-            setFeedback(response.data || []); // Ensure empty array if no data
+            setFeedback(response.data || []);
         } catch (error) {
             console.error("Error fetching feedbacks:", error);
-            setFeedback([]); // Prevent undefined state
+            setFeedback([]);
         }
     };
 
-    // Format Date and Time
     const formatDateTime = (isoString) => {
         if (!isoString) return "N/A"; 
         const date = new Date(isoString);
@@ -36,7 +36,6 @@ function ViewFeedbacks() {
         return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
     };
 
-    // Filter Feedbacks
     const filteredRequests = (Feedback || []).filter((request) => {
         return (
             (searchQuery === "" ||
@@ -47,15 +46,21 @@ function ViewFeedbacks() {
         );
     });
 
-    // Toggle Feedback Visibility
     const handleToggleStatus = async (feedbackId, currentStatus) => {
         const newStatus = Number(currentStatus) === 1 ? 0 : 1;
-        try {
-            await axios.put(`http://localhost:5001/api/feedback/${feedbackId}/status`, { is_visible: newStatus });
-            fetchFeedbacks(); // Refresh data after update
-        } catch (error) {
-            console.error("Error updating feedback visibility:", error);
-        }
+        showConfirmationModal(
+            `Are you sure you want to ${newStatus === 1 ? "show" : "hide"} this feedback?`,
+            async () => {
+                try {
+                    await axios.put(`http://localhost:5001/api/feedback/${feedbackId}/status`, { is_visible: newStatus });
+                    fetchFeedbacks();
+                    showModal("Feedback status updated successfully", "success");
+                } catch (error) {
+                    console.error("Error updating feedback visibility:", error);
+                    showModal("Failed to update feedback status", "error");
+                }
+            }
+        );
     };
 
     return (

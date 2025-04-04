@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useModal } from "../components/ModalContext";
 
 function ViewUser() {
-    const { showModal } = useModal();
+    const { showModal, showConfirmationModal } = useModal();
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
@@ -24,15 +24,21 @@ function ViewUser() {
     const handleToggleStatus = async (userId, currentStatus) => {
         const newStatus = currentStatus === "active" ? "deactive" : "active";
 
-        try {
-            await axios.put(`http://localhost:5002/api/users/${userId}/status`, { status: newStatus });
-            showModal(`User status changed to ${newStatus}`, "success"); // Success Message
-            fetchUsers(); // Refresh users after update
-        } catch (error) {
-            showModal("Error updating user status", "error"); // Error Message
-            console.error("Error updating user status:", error);
-        }
+        showConfirmationModal(
+            `Are you sure you want to change the user status to ${newStatus}?`,
+            async () => {
+                try {
+                    await axios.put(`http://localhost:5002/api/users/${userId}/status`, { status: newStatus });
+                    showModal(`User status changed to ${newStatus}`, "success"); // Success Message
+                    fetchUsers(); // Refresh users after update
+                } catch (error) {
+                    showModal("Error updating user status", "error"); // Error Message
+                    console.error("Error updating user status:", error);
+                }
+            }
+        );
     };
+
 
     const filteredUsers = users.filter((user) =>
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -89,8 +95,8 @@ function ViewUser() {
                                             <button
                                                 onClick={() => handleToggleStatus(user.id, user.status)}
                                                 className={`px-3 py-1 rounded-md transition text-xs sm:text-sm ${user.status === "active"
-                                                        ? "bg-red-600 text-white hover:bg-red-500"
-                                                        : "bg-green-600 text-white hover:bg-green-500"
+                                                    ? "bg-red-600 text-white hover:bg-red-500"
+                                                    : "bg-green-600 text-white hover:bg-green-500"
                                                     }`}
                                             >
                                                 {user.status === "active" ? "Deactivate" : "Activate"}

@@ -9,68 +9,66 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
-
+import { useModal } from "../components/ModalContext";
 
 function ViewAuditoriums() {
   const [auditoriums, setAuditoriums] = useState([]);
   const [maintenanceAuditoriums, setMaintenanceAuditoriums] = useState([]);
   const [selectedAuditorium, setSelectedAuditorium] = useState(null);
   const navigate = useNavigate();
+  const { showModal, showConfirmationModal } = useModal();
 
   useEffect(() => {
     fetch("http://localhost:5002/api/auditoriums")
       .then((response) => response.json())
       .then((data) => setAuditoriums(data))
       .catch((error) => console.error("Error fetching auditoriums:", error));
-
-
   }, []);
 
   const formatTime = (isoString) => {
-    // Convert "1970-01-01T10:00:00.000Z" → "10:00"
-    return isoString.split("T")[1].slice(0, 5); // Extract HH:MM from the ISO string
+    return isoString.split("T")[1].slice(0, 5);
   };
 
   const handleViewDetails = (auditorium) => {
     setSelectedAuditorium(auditorium);
   };
+
   const handleToggleMaintenance = (id, isUnderMaintenance) => {
     const confirmationMessage = isUnderMaintenance
       ? "Are you sure you want to restore this auditorium?"
       : "Are you sure you want to move this auditorium to maintenance?";
 
-    if (!window.confirm(confirmationMessage)) return;
-
-    fetch(`http://localhost:5002/api/auditoriums/${id}/toggle-maintenance`, {
-      method: "POST",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        alert(data.message || "Operation successful");
-
-        setAuditoriums((prev) => {
-          if (isUnderMaintenance) {
-            // Restore: Move from maintenance list to main list
-            const restoredAuditorium = maintenanceAuditoriums.find(a => a.id === id);
-            return [...prev, restoredAuditorium];
-          } else {
-            // Move to maintenance: Remove from main list
-            return prev.filter((auditorium) => auditorium.id !== id);
-          }
-        });
-
-        setMaintenanceAuditoriums((prev) => {
-          if (isUnderMaintenance) {
-            // Remove from maintenance list after restore
-            return prev.filter((auditorium) => auditorium.id !== id);
-          } else {
-            // Add to maintenance list after marking it
-            const movedAuditorium = auditoriums.find(a => a.id === id);
-            return [...prev, movedAuditorium];
-          }
-        });
+    showConfirmationModal(confirmationMessage, () => {
+      fetch(`http://localhost:5002/api/auditoriums/${id}/toggle-maintenance`, {
+        method: "POST",
       })
-      .catch((error) => console.error("Error toggling maintenance:", error));
+        .then((response) => response.json())
+        .then((data) => {
+          showModal(data.message || "Operation successful", "success");
+
+          setAuditoriums((prev) => {
+            if (isUnderMaintenance) {
+              const restoredAuditorium = maintenanceAuditoriums.find(a => a.id === id);
+              return [...prev, restoredAuditorium];
+            } else {
+              return prev.filter((auditorium) => auditorium.id !== id);
+            }
+          });
+
+          setMaintenanceAuditoriums((prev) => {
+            if (isUnderMaintenance) {
+              return prev.filter((auditorium) => auditorium.id !== id);
+            } else {
+              const movedAuditorium = auditoriums.find(a => a.id === id);
+              return [...prev, movedAuditorium];
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error toggling maintenance:", error);
+          showModal("Failed to update maintenance status.", "error");
+        });
+    });
   };
 
   const handleEdit = (id) => {
