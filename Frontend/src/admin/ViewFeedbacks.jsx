@@ -49,7 +49,7 @@ function ViewFeedbacks() {
     const handleToggleStatus = async (feedbackId, currentStatus) => {
         const newStatus = Number(currentStatus) === 1 ? 0 : 1;
         showConfirmationModal(
-            `Are you sure you want to ${newStatus === 1 ? "show" : "hide"} this feedback?`,
+            `Are you sure you want to ${newStatus === 1 ? "hide" : "show"} this feedback on the homepage??`,
             async () => {
                 try {
                     await axios.put(`http://localhost:5001/api/feedback/${feedbackId}/status`, { is_visible: newStatus });
