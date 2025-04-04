@@ -87,6 +87,37 @@ app.delete("/api/feedback/delete/:id", async (req, res) => {
   }
 });
 
+//update Feedback
+app.put("/api/feedback/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const { feedbackText } = req.body;
+
+  try {
+    const pool = await poolPromise;
+
+    const checkFeedback = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .query("SELECT * FROM feedback WHERE id = @id");
+
+    if (checkFeedback.recordset.length === 0) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    await pool
+      .request()
+      .input("id", sql.Int, id)
+      .input("feedbackText", sql.NVarChar, feedbackText)
+      .query("UPDATE feedback SET feedbackText = @feedbackText WHERE id = @id");
+
+    res.status(200).json({ message: "Feedback updated successfully" });
+  } catch (error) {
+    console.error("Error updating feedback:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 //get auditorium time slot for booked like in Pending,approved,confirm
 app.get("/booked-slots/:auditoriumId", async (req, res) => {
   try {
