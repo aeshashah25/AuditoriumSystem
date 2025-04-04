@@ -37,15 +37,33 @@ const DashboardContent = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {/* Dashboard Cards with Tooltips */}
           {[
-            { label: "Total Auditoriums", value: stats.totalAuditoriums, color: "bg-indigo-600", tooltip: "Total number of auditoriums available" },
-            { label: "Under Maintenance Auditoriums", value: stats.maintenanceAuditoriums, color: "bg-yellow-500", tooltip: "Auditoriums currently under maintenance" },
-            { label: "Total Users", value: stats.totalUsers, color: "bg-blue-600", tooltip: "Total number of registered users" },
-            { label: "Pending Requests", value: stats.pendingRequests, color: "bg-orange-500", tooltip: "Total pending booking requests" },
-            { label: "Approved Requests", value: stats.approvedBeforePayment, color: "bg-green-400", tooltip: "Approved bookings awaiting payment" },
-            { label: "Rejected Requests", value: stats.rejectBookings, color: "bg-red-600", tooltip: "Total rejected booking requests by Admin" },
-            { label: "Cancelled Bookings", value: stats.cancelledBookings, color: "bg-gray-500", tooltip: "Bookings cancelled by users " },
-            { label: "Completed Bookings", value: stats.completedBookings, color: "bg-green-700", tooltip: "Bookings successfully completed after payment" },
-            { label: "Feedback", value: stats.totalFeedback, color: "bg-purple-600", tooltip: "Total feedback received from users" },
+            { label: "Total Auditoriums", value: stats.totalAuditoriums, color: "bg-indigo-600", tooltip: "Total number of auditoriums available" }, 
+            // Indigo represents professionalism and stability, suitable for showing total available resources.
+            
+            { label: "Under Maintenance Auditoriums", value: stats.maintenanceAuditoriums, color: "bg-yellow-500", tooltip: "Auditoriums currently under maintenance" }, 
+            // Yellow symbolizes caution and warning, indicating that these auditoriums are temporarily unavailable.
+            
+            { label: "Total Users", value: stats.totalUsers, color: "bg-blue-600", tooltip: "Total number of registered users" }, 
+            // Blue signifies trust and reliability, making it a good choice for displaying total user count.
+            
+            { label: "Pending Requests", value: stats.pendingRequests, color: "bg-orange-500", tooltip: "Total pending booking requests" }, 
+            // Orange conveys urgency and attention, highlighting pending booking requests that need action.
+            
+            { label: "Approved Requests", value: stats.approvedBeforePayment, color: "bg-green-400", tooltip: "Approved bookings awaiting payment" }, 
+            // Light green symbolizes progress and positivity, indicating that bookings have been approved and are awaiting payment.
+            
+            { label: "Rejected Requests", value: stats.rejectBookings, color: "bg-red-600", tooltip: "Total rejected booking requests by Admin" }, 
+            // Red is commonly associated with errors or negative actions, making it ideal for rejected booking requests.
+            
+            { label: "Cancelled Bookings", value: stats.cancelledBookings, color: "bg-gray-500", tooltip: "Bookings cancelled by users " }, 
+            // Gray represents neutrality and inactivity, fitting for bookings that users have voluntarily canceled.
+            
+            { label: "Completed Bookings", value: stats.completedBookings, color: "bg-green-700", tooltip: "Bookings successfully completed after payment" }, 
+            // Dark green indicates success and accomplishment, representing bookings that have been successfully completed.
+            
+            { label: "Feedback", value: stats.totalFeedback, color: "bg-purple-600", tooltip: "Total feedback received from users" } 
+            // Purple is often linked to creativity and communication, making it a good choice for user feedback.
+            
           ].map((item, index) => (
             <div
               key={index}

@@ -369,8 +369,12 @@ function ViewBookingRequests() {
 
             </p>
             <p>
-              <strong>Amentities:</strong> {selectedBooking.amenities}
+              <strong>Amenities:</strong>{" "}
+              {selectedBooking.amenities && selectedBooking.amenities.trim() !== ""
+                ? selectedBooking.amenities
+                : "No amenities available for this booking."}
             </p>
+
             <p>
               <strong>Cost:</strong> ₹{selectedBooking.total_amount}
             </p>
