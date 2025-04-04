@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from 'react-icons/fa';
+import { useModal } from "../components/ModalContext";
 
 function ViewUser() {
+    const { showModal } = useModal();
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
@@ -25,8 +26,10 @@ function ViewUser() {
 
         try {
             await axios.put(`http://localhost:5002/api/users/${userId}/status`, { status: newStatus });
+            showModal(`User status changed to ${newStatus}`, "success"); // Success Message
             fetchUsers(); // Refresh users after update
         } catch (error) {
+            showModal("Error updating user status", "error"); // Error Message
             console.error("Error updating user status:", error);
         }
     };
