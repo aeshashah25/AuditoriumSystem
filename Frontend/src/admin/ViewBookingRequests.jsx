@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useModal } from "../components/ModalContext";
 
 function ViewBookingRequests() {
+  const { showModal, showConfirmationModal } = useModal();
+  const [isProcessing, setIsProcessing] = useState(false); // Track action processing state
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -24,22 +27,17 @@ function ViewBookingRequests() {
       setLoading(false);
     }
   };
-  // for format date and time
+
   const formatDateTime = (isoString) => {
-    if (!isoString) return "N/A"; // Handle empty values
-
+    if (!isoString) return "N/A";
     const date = new Date(isoString);
-
-    // Extract UTC parts manually
     const day = date.getUTCDate();
     const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
     const year = date.getUTCFullYear();
-
     let hours = date.getUTCHours();
     const minutes = date.getUTCMinutes().toString().padStart(2, "0");
     const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
-
+    hours = hours % 12 || 12;
     return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
   };
 
@@ -60,13 +58,15 @@ function ViewBookingRequests() {
 
   const handleAction = async () => {
     if (actionType === "approve" && !discount) {
-      alert("Enter discount percentage!");
+      showModal("Enter discount percentage!", "error");
       return;
     }
     if (actionType === "reject" && !rejectReason) {
-      alert("Enter rejection reason!");
+      showModal("Enter rejection reason!", "error");
       return;
     }
+
+    setIsProcessing(true); // Start loading
 
     try {
       await axios.post("http://localhost:5001/update-booking-status", {
@@ -80,10 +80,15 @@ function ViewBookingRequests() {
         dates: JSON.stringify(selectedBooking.dates),
       });
 
-      alert(`Booking ${actionType}d successfully!`);
-      closeModal();
-      fetchBookings(); // Refresh booking list
+      // Simulate delay for better UX
+      setTimeout(() => {
+        showModal(`Booking ${actionType}d successfully!`, "success");
+        closeModal();
+        fetchBookings();
+        setIsProcessing(false); // Stop loading after confirmation message
+      }, 1500); // Adjust time as needed
     } catch (error) {
+      showModal("Error updating booking status", "error");
       console.error(`❌ Error updating booking status:`, error);
     }
   };
@@ -434,11 +439,37 @@ function ViewBookingRequests() {
               {actionType && (
                 <button
                   onClick={handleAction}
-                  className={`py-2 px-4 rounded text-white ${actionType === "approve" ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"
-                    }`}
+                  disabled={isProcessing}
+                  className={`py-2 px-4 rounded text-white flex items-center justify-center gap-2
+                  ${actionType === "approve" ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"}
+                `}
                 >
-                  {actionType === "approve" ? "Approve" : "Reject"}
+                  {isProcessing ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    `${actionType === "approve" ? "Approve" : "Reject"} Booking`
+                  )}
                 </button>
+
               )}
             </div>
 
