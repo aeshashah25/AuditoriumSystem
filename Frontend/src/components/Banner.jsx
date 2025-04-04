@@ -11,15 +11,15 @@ export default function HoveringSlider() {
     const fetchAuditoriums = async () => {
       try {
         const response = await axios.get("http://localhost:5002/api/auditoriums");
-        
+
         const formattedData = response.data.map(auditorium => ({
           ...auditorium,
           images: Array.isArray(auditorium.images) && auditorium.images.length > 0
-            ? auditorium.images.map(img => img?.data ? `data:${img.mimetype};base64,${img.data}` : "/default.jpg")  
-            : ["/default.jpg"]  
+            ? auditorium.images.map(img => img?.data ? `data:${img.mimetype};base64,${img.data}` : "/default.jpg")
+            : ["/default.jpg"]
         }));
 
-       // console.log("Fetched Data:", formattedData);
+        // console.log("Fetched Data:", formattedData);
         setAuditoriums(formattedData);
       } catch (error) {
         console.error("Error fetching auditorium data:", error);
@@ -38,7 +38,9 @@ export default function HoveringSlider() {
   if (auditoriums.length === 0)
     return (
       <div className="flex justify-center items-center h-[300px] sm:h-[400px] md:h-[500px] text-white">
-        Loading...
+        <div className="fixed inset-0 flex justify-center items-center bg-white">
+          <div className="w-10 h-10 border-4 border-t-transparent border-[#8B4513] rounded-full animate-spin"></div>
+        </div>
       </div>
     );
 
@@ -88,9 +90,8 @@ export default function HoveringSlider() {
             key={index}
             src={item.images[0]} // ✅ Use only the first image
             alt={item.name}
-            className={`w-8 h-8 sm:w-12 sm:h-12 rounded-md cursor-pointer transition-transform ${
-              index === currentIndex ? "border-2 border-white scale-110" : "opacity-50"
-            }`}
+            className={`w-8 h-8 sm:w-12 sm:h-12 rounded-md cursor-pointer transition-transform ${index === currentIndex ? "border-2 border-white scale-110" : "opacity-50"
+              }`}
             onClick={() => setCurrentIndex(index)}
             whileHover={{ scale: 1.2 }}
           />

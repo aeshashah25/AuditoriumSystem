@@ -125,7 +125,12 @@ function AuditoriumDetail() {
   };
 
 
-  if (!auditorium) return <p>Loading details...</p>;
+  if (!auditorium)
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-white">
+        <div className="w-10 h-10 border-4 border-t-transparent border-[#8B4513] rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <div className="bg-gray-100">
