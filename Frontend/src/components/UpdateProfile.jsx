@@ -75,10 +75,28 @@ const UpdateProfile = () => {
   // Handle profile picture selection
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+  
     if (file) {
-      setImagePreview(file); // Store file object for API upload
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only JPG, JPEG, and PNG files are allowed.");
+        setImagePreview(null);
+        return;
+      }
+  
+      if (file.size > maxSize) {
+        setError("Image size should not exceed 5MB.");
+        setImagePreview(null);
+        return;
+      }
+  
+      setError(null); // Clear any previous errors
+      setImagePreview(file); // File is valid
     }
   };
+  
 
   return (
     <>
