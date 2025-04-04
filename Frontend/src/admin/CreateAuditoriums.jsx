@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import { useModal } from "../components/ModalContext";
 
 const CreateAuditoriums = () => {
+  const { showModal } = useModal();
   const navigate = useNavigate();
   const { id } = useParams();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -30,7 +33,7 @@ const CreateAuditoriums = () => {
     if (id) {
       axios.get(`http://localhost:5002/api/auditoriums`, { params: { id } })
         .then(response => {
-          console.log("Fetched Data:", response.data); // Debugging line
+          //console.log("Fetched Data:", response.data); // Debugging line
 
           const formatTime = (isoString) => {
             if (!isoString) return "";
@@ -110,17 +113,17 @@ const CreateAuditoriums = () => {
         await axios.put(`http://localhost:5002/api/auditoriums/${id}`, formDataToSend, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("Auditorium updated successfully!");
+        showModal("Auditorium updated successfully!", "success");
       } else {
         await axios.post("http://localhost:5002/api/create-auditorium", formDataToSend, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("Auditorium added successfully!");
+        showModal("Auditorium added successfully!", "success");
       }
       navigate("/DashBoard/view-auditoriums");
     } catch (error) {
       console.error("Error saving auditorium:", error);
-      alert("Failed to save auditorium.");
+      showModal("Failed to save auditorium.", "error");
     }
   };
 

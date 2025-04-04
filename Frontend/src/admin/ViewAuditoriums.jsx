@@ -184,7 +184,6 @@ function ViewAuditoriums() {
     </div>
   );
 
-
 }
 
 export default ViewAuditoriums;
