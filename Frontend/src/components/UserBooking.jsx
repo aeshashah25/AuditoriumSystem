@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import FixedLayout from "../components/FixedLayout";
+import { useModal } from "../components/ModalContext";
 
 function UserBooking() {
+  const { showModal, showConfirmationModal } = useModal();
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -45,39 +49,54 @@ function UserBooking() {
       setBookings(response.data);
     } catch (error) {
       console.error("❌ Error fetching bookings:", error);
+      showModal("❌ Error fetching bookings. Please try again later.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const cancelBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    showConfirmationModal(
+      "Are you sure you want to cancel this booking?",
+      async () => {
+        setIsCancelling(true); // Start spinner
+        try {
+          await axios.get(`http://localhost:5001/cancel-booking/${bookingId}`);
+          showModal("✅ Booking cancelled successfully!", "success");
 
-    try {
-      await axios.get(`http://localhost:5001/cancel-booking/${bookingId}`);
-      alert("✅ Booking cancelled successfully!");
-
-      // Refresh bookings after cancellation
-      if (userId) fetchBookings(userId);
-    } catch (error) {
-      console.error("❌ Error cancelling booking:", error);
-      alert("❌ Failed to cancel booking. Try again later.");
-    }
+          // Refresh bookings after cancellation
+          if (userId) fetchBookings(userId);
+        } catch (error) {
+          console.error("❌ Error cancelling booking:", error);
+          showModal("❌ Failed to cancel booking. Try again later.", "error");
+        }
+        finally {
+          setIsCancelling(false); // Stop spinner
+        }
+      }
+    );
   };
 
   const PaymentBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to proceed with the payment?")) return;
+    showConfirmationModal(
+      "Are you sure you want to proceed with the payment?",
+      async () => {
+        setIsPaying(true); // Start spinner
+        try {
+          await axios.post(`http://localhost:5001/make-payment/${bookingId}`);
+          showModal("✅ Payment successful!", "success");
 
-    try {
-      await axios.post(`http://localhost:5001/make-payment/${bookingId}`);
-      alert("✅ Payment successful!");
-
-      // Refresh bookings after payment
-      if (userId) fetchBookings(userId);
-    } catch (error) {
-      console.error("❌ Error processing payment:", error);
-      alert("❌ Failed to make payment. Try again later.");
-    }
+          // Refresh bookings after payment
+          if (userId) fetchBookings(userId);
+        } catch (error) {
+          console.error("❌ Error processing payment:", error);
+          showModal("❌ Failed to make payment. Try again later.", "error");
+        }
+        finally {
+          setIsPaying(false); // Stop spinner
+        }
+      }
+    );
   };
 
   const today = new Date();
@@ -311,13 +330,13 @@ function UserBooking() {
                             {/* Show Discount Applied only if it's greater than 0 */}
                             {booking.approved_discount > 0 && (
                               <>
-                              <p className="text-gray-700">
-                                <strong>Discount Applied:</strong> {booking.approved_discount}%
-                              </p>
-                              <p className="text-lg font-medium">
-                              <strong>Final Payable Amount:</strong> ₹{booking.discount_amount}
-                            </p>
-                            </>
+                                <p className="text-gray-700">
+                                  <strong>Discount Applied:</strong> {booking.approved_discount}%
+                                </p>
+                                <p className="text-lg font-medium">
+                                  <strong>Final Payable Amount:</strong> ₹{booking.discount_amount}
+                                </p>
+                              </>
                             )}
 
                             <p className="text-gray-700">
@@ -413,9 +432,16 @@ function UserBooking() {
                         {["Pending", "approved", "confirm"].includes(booking.booking_status) && (
                           <button
                             onClick={() => cancelBooking(booking.id)}
+                            disabled={isCancelling}
                             className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
-                          >
-                            Cancel
+                          >{isCancelling ? (
+                            <span className="flex items-center gap-2">
+                              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></span>
+                              Cancelling Booking...
+                            </span>
+                          ) : (
+                            "Cancel Booking"
+                          )}
                           </button>
                         )}
 
@@ -423,8 +449,16 @@ function UserBooking() {
                         {booking.booking_status === "approved" && (
                           <button
                             onClick={() => PaymentBooking(booking.id)}
+                            disabled={isPaying}
                             className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
-                            Payment
+                            {isPaying ? (
+                              <span className="flex items-center gap-2">
+                                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></span>
+                                Processing Payment...
+                              </span>
+                            ) : (
+                              "Make Payment"
+                            )}
                           </button>
                         )}
 
