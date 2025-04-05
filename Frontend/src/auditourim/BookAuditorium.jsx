@@ -4,8 +4,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import FixedLayout from "../components/FixedLayout";
+import { useModal } from "../components/ModalContext";
 
 function BookAuditorium() {
+  const { showModal, showConfirmationModal } = useModal();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -80,8 +82,6 @@ function BookAuditorium() {
     setSelectedDates(range);
   };
 
-
-
   const handleSingleDateChange = (date) => {
     const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
       .toISOString()
@@ -97,6 +97,7 @@ function BookAuditorium() {
       setSelectedSlots({ ...selectedSlots, [localDate]: [] });
     }
   };
+
   const handleSlotChange = (date, slot) => {
     let updatedSlots = { ...selectedSlots };
 
@@ -129,7 +130,6 @@ function BookAuditorium() {
     }
   };
 
-
   const handleAmenityChange = (amenity) => {
     setSelectedAmenities((prev) =>
       prev.includes(amenity.name) ? prev.filter((a) => a !== amenity.name) : [...prev, amenity.name]
@@ -159,12 +159,13 @@ function BookAuditorium() {
 
     const userId = localStorage.getItem("user_id");
     if (!userId) {
-      alert("User not logged in. Please log in first!");
+      showModal("User not logged in. Please log in first!", "error");
       return;
     }
 
     if (!eventName || selectedDates.length === 0) {
-      alert("Please fill all fields!");
+      showModal("Please fill all fields!", "error");
+      //alert("Please fill all fields!");
       return;
     }
 
@@ -203,7 +204,7 @@ function BookAuditorium() {
       });
 
       if (response.ok) {
-        alert("✅ Booking Successful!");
+        showModal("🎯 Booking request submitted! Awaiting admin approval.", "success");
         setEventName("");
         setSelectedDates([]);
         setSelectedSlots({});
@@ -213,14 +214,14 @@ function BookAuditorium() {
         navigate("/your-booking-page");
       } else {
         const errorData = await response.json();
-        alert(`❌ Booking Failed: ${errorData.message}`);
+        showModal(`❌ Booking Failed: ${errorData?.message || "An unexpected error occurred."}`, "error");
+        //alert(`❌ Booking Failed: ${errorData.message}`);
       }
     } catch (error) {
       console.error("❌ Error submitting booking:", error);
-      alert("❌ Error submitting booking. Please try again.");
+      showModal("❌ Error submitting booking. Please try again.", "error");
     }
   };
-
 
   return (
     <>
@@ -336,8 +337,9 @@ function BookAuditorium() {
 
               <label className="block text-gray-700 font-semibold mb-1">Select Amenities:</label>
               <p className="text-sm text-gray-700 italic bg-yellow-100 p-2 rounded-md">
-                    Amenities are charged for the full booking duration, not on an hourly basis.
+                Please note: Amenities are billed for the entire duration of the booking, irrespective of hours used. For each selected amenity, only one unit is allowed per booking.
               </p>
+
               <div className="grid grid-cols-1 gap-3 mt-2">
                 {auditorium.amenities.map((amenity, index) => (
                   <label key={index} className="flex items-center space-x-2 bg-white p-3 rounded-md border">
@@ -350,7 +352,7 @@ function BookAuditorium() {
                     <span>{amenity.name} (+₹{amenity.cost})</span>
                   </label>
                 ))}
-                
+
               </div>
 
               <h2 className="text-xl font-bold mt-6 text-gray-800">Total Cost: ₹{totalPrice}</h2>
