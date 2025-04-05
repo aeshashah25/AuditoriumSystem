@@ -464,7 +464,6 @@ function UserBooking() {
 
                       </div>
 
-
                     </li>
 
                   ))}
@@ -598,12 +597,14 @@ function UserBooking() {
                       <p className="text-gray-600">
                         <strong>Amentities:</strong> {booking.amenities}
                       </p>
+                      <p className="text-gray-600"><strong>Booking Status:</strong> {booking.booking_status}</p>
+                      <p className="text-gray-600"><strong>Payment Status:</strong> {booking.payment_status}</p>
                       <p className="text-lg font-medium text-gray-800">
                         <strong>Total Amount:</strong> ₹{booking.total_amount}
                       </p>
 
                       {/* Show Discount & Final Payable Amount if Approved and Discount > 0 */}
-                      {booking.booking_status === "Completed" && booking.approved_discount > 0 && (
+                      {booking.booking_status === "confirm" && booking.approved_discount > 0 && (
                         <>
                           <p className="text-gray-700">
                             <strong>Discount Applied:</strong> {booking.approved_discount}%
@@ -614,9 +615,40 @@ function UserBooking() {
                         </>
                       )}
 
-                      <p className="text-gray-600">
-                        <strong>Status:</strong> {booking.event_status}
-                      </p>
+                      {/* Refund Info */}
+                      {booking.refund_amount > 0 && (
+                        <p className="text-gray-700">
+                          <strong>Refunded Amount:</strong> ₹{booking.refund_amount}
+                        </p>
+                      )}
+
+                      {/* Rejection Reason */}
+                      {booking.booking_status === "rejected" && booking.reject_reason && (
+                        <p className="text-red-600">
+                          <strong>Rejection Reason:</strong> {booking.reject_reason}
+                        </p>
+                      )}
+
+                      {/* Due Date / Payment Date */}
+                      {booking.payment_status !== 'Pending' &&
+                        booking.payment_due &&
+                        booking.booking_status !== 'cancelled' &&
+                        booking.booking_status !== 'rejected' && (
+                          <p className="text-red-500">
+                            <strong>Payment Due By:</strong> {formatDateTime(booking.payment_due)}
+                          </p>
+                        )}
+
+                      {booking.payment_status === 'successful' && booking.payment_date && (
+                        <p className="text-green-600"><strong>Paid On:</strong> {formatDateTime(booking.payment_date)}</p>
+                      )}
+
+                      {/* Timestamps */}
+                      <p className="text-gray-500 text-sm"><strong>Requested On:</strong> {formatDateTime(booking.created_at)}</p>
+                      {booking.updated_date && (
+                        <p className="text-gray-500 text-sm"><strong>Last Updated:</strong> {formatDateTime(booking.updated_date)}</p>
+                      )}
+
                     </li>
                   ))}
                 </ul>
