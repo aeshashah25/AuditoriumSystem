@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { useModal } from "../components/ModalContext";
 
 const Header = () => {
+  const { showModal } = useModal();
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
   const [profilePicUrl, setProfilePicUrl] = useState(null);
@@ -90,7 +91,8 @@ const Header = () => {
     const storedUserId = localStorage.getItem("userId");
 
     if (!selectedAuditorium || !feedback.trim()) {
-      alert("Please select an auditorium and enter feedback.");
+      setShowFeedbackPopup(false);
+      showModal("Please select an auditorium and enter feedback.", "error");
       return;
     }
 
@@ -107,14 +109,17 @@ const Header = () => {
       });
 
       if (response.status === 201) {
-        alert("Feedback submitted successfully!");
+        showModal("Feedback submitted successfully!", "success");
+        //alert("Feedback submitted successfully!");
         setShowFeedbackPopup(false);
         setFeedback("");
       } else {
-        alert("Failed to submit feedback. Try again.");
+        showModal("Failed to submit feedback. Try again", "error");
+        //alert("Failed to submit feedback. Try again.");
       }
     } catch (error) {
-      alert("Error submitting feedback. Please try again later.");
+      showModal("Error submitting feedback. Please try again later", "error");
+      //alert("Error submitting feedback. Please try again later.");
     }
   };
 
@@ -129,7 +134,8 @@ const Header = () => {
           setAuditoriums(response.data);
         }
       } catch (error) {
-        console.error("Error fetching auditoriums:", error);
+        showModal(`Error fetching auditoriums: ${error}`, "error");
+        //console.error("Error fetching auditoriums:", error);
       }
     };
 

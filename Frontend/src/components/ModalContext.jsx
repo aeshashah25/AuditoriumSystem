@@ -39,7 +39,7 @@ export const ModalProvider = ({ children }) => {
             {children}
 
             {modalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm animate-fadeIn">
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm animate-fadeIn z-50">
                     <div className={`bg-white p-8 rounded-2xl shadow-2xl w-[90%] sm:w-96 text-center`}>
                         <div className="flex justify-center mb-4">
                             {modalType === "success" ? (
@@ -64,7 +64,7 @@ export const ModalProvider = ({ children }) => {
             )}
 
             {confirmOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm animate-fadeIn">
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm animate-fadeIn z-50">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-[90%] sm:w-96 text-center">
                         <p className="text-lg font-semibold text-gray-800">{confirmMessage}</p>
                         <div className="mt-5 flex justify-center gap-4">

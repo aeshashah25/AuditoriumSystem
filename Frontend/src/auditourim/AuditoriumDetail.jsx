@@ -9,8 +9,10 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import BookAuditorium from "./BookAuditorium";
 import FixedLayout from "../components/FixedLayout";
+import { useModal } from "../components/ModalContext";
 
 function AuditoriumDetail() {
+  const { showModal, showConfirmationModal } = useModal();
   const { id } = useParams();
   const navigate = useNavigate();
   const [auditorium, setAuditorium] = useState(null);
@@ -27,7 +29,7 @@ function AuditoriumDetail() {
     const storedUserID = localStorage.getItem("user_id");
     //console.log(`Logged-in User ID: ${storedUserID}`);
     if (!storedUserID) {
-      alert("User not logged in. Please log in first!");
+      showModal("User not logged in. Please log in first!", "error");
       return;
     }
     setLoggedInUserID(storedUserID); // Store user ID in state
@@ -85,26 +87,23 @@ function AuditoriumDetail() {
       const data = JSON.parse(textResponse);
 
       if (response.ok) {
-        alert("Feedback updated successfully!");
+        showModal("Feedback updated successfully!", "success");
+        //alert("");
         setFeedback(feedback.map((item) =>
           item.id === feedbackID ? { ...item, feedbackText: editedFeedbackText } : item
         ));
         setEditableFeedbackID(null); // Exit edit mode
       } else {
-        alert(data.message || "Failed to update feedback");
+        showModal(data.message || "Failed to update feedback", "error");
+        //alert(data.message || "Failed to update feedback");
       }
     } catch (error) {
-      console.error("Error updating feedback:", error);
-      alert("Error updating feedback");
+      showModal(error.response?.data?.message || "Error updating feedback", "error");
     }
   };
 
-  const handleDelete = async (feedbackID) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this feedback?");
-    if (!confirmDelete) return; // Exit if user cancels
-
-    //console.log("Deleting Feedback:", feedbackID);
-
+const handleDelete = async (feedbackID) => {
+  showConfirmationModal("Are you sure you want to delete this feedback?", async () => {
     try {
       const response = await fetch(`http://localhost:5001/api/feedback/delete/${feedbackID}`, {
         method: "DELETE",
@@ -113,17 +112,17 @@ function AuditoriumDetail() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Feedback deleted successfully!");
-        setFeedback(feedback.filter((item) => item.id !== feedbackID)); // Update state
+        showModal("Feedback deleted successfully!", "success");
+        setFeedback((prev) => prev.filter((item) => item.id !== feedbackID));
       } else {
-        alert(data.message || "Failed to delete feedback");
+        showModal(data.message || "Failed to delete feedback", "error");
       }
     } catch (error) {
       console.error("Error deleting feedback:", error);
-      alert("Error deleting feedback");
+      showModal("Error deleting feedback", "error");
     }
-  };
-
+  });
+};
 
   if (!auditorium)
     return (

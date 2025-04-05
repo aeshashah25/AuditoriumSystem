@@ -4,8 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import FixedLayout from './FixedLayout';
+import { useModal } from "../components/ModalContext";
 
 const UpdateProfile = () => {
+  const { showModal } = useModal();
   const [imagePreview, setImagePreview] = useState(null);
   const [profilePicUrl, setProfilePicUrl] = useState(null); // Holds the current profile picture URL
   const [error, setError] = useState(null);
@@ -63,10 +65,11 @@ const UpdateProfile = () => {
             "Authorization": `Bearer ${token}`,
           },
         });
-
-        alert("Profile updated successfully!");
+        showModal("Profile updated successfully", "success");
         navigate("/MainPage");
       } catch (err) {
+        //console.error("Error updating user status:", err);
+        showModal("Error updating user status", "error");
         setError("Failed to update profile. Please try again.");
       }
     },
@@ -75,28 +78,28 @@ const UpdateProfile = () => {
   // Handle profile picture selection
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-  
+
     if (file) {
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-  
+
       if (!allowedTypes.includes(file.type)) {
         setError("Only JPG, JPEG, and PNG files are allowed.");
         setImagePreview(null);
         return;
       }
-  
+
       if (file.size > maxSize) {
         setError("Image size should not exceed 5MB.");
         setImagePreview(null);
         return;
       }
-  
+
       setError(null); // Clear any previous errors
       setImagePreview(file); // File is valid
     }
   };
-  
+
 
   return (
     <>
