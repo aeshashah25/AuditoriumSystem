@@ -137,27 +137,30 @@ const CreateAuditoriums = () => {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Section - Auditorium Details */}
         <div className="space-y-4">
-          <input type="text" name="name" placeholder="Auditorium Name" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
-          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
-          <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
+          <input type="text" name="name" placeholder="Auditorium Name*" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
+          <textarea name="description" placeholder="Description*" value={formData.description} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
+          <input type="number" name="capacity" placeholder="Capacity*" value={formData.capacity} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-gray-600 mb-1">Opening Time</label>
+              <label className="block text-gray-600 mb-1">Opening Time*</label>
               <input type="time" name="start_time" value={formData.start_time} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
             </div>
             <div>
-              <label className="block text-gray-600 mb-1">Closing Time</label>
+              <label className="block text-gray-600 mb-1">Closing Time*</label>
               <input type="time" name="end_time" value={formData.end_time} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
             </div>
           </div>
 
-          <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
-          <input type="number" name="price_per_hour" placeholder="Price Per Hour" value={formData.price_per_hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
+          <input type="text" name="location" placeholder="Location*" value={formData.location} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
+          <input type="number" name="price_per_hour" placeholder="Price Per Hour*" value={formData.price_per_hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required />
         </div>
 
         {/* Right Section - Image Upload and Amenities */}
         <div className="space-y-4">
+          <label className="block text-gray-700 font-medium mb-1">
+            Upload Images <span className="text-red-500">*</span>
+          </label>
           <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required={!id} />
 
           {existingImages.length > 0 && (
@@ -174,8 +177,8 @@ const CreateAuditoriums = () => {
           <div className="p-4 bg-gray-100 rounded-lg shadow-md">
             <h3 className="font-semibold text-lg text-gray-700 mb-3">Add Amenities</h3>
             <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_auto] gap-5 items-center">
-              <input type="text" name="name" value={newAmenity.name} placeholder="Amenity Name" onChange={handleAmenityChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-green-400" />
-              <input type="number" name="cost" value={newAmenity.cost} placeholder="Amenity Cost" onChange={handleAmenityChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-green-400" />
+              <input type="text" name="name" value={newAmenity.name} placeholder="Amenity Name*" onChange={handleAmenityChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-green-400" />
+              <input type="number" name="cost" value={newAmenity.cost} placeholder="Amenity Cost*" onChange={handleAmenityChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-green-400" />
               <button type="button" onClick={addAmenity} className="p-2 w-10 h-10 flex items-center justify-center border text-green-500 rounded-full bg-white transition duration-300 hover:bg-green-500 hover:text-white">
                 <span className="text-xl font-bold">+</span>
               </button>

@@ -418,7 +418,9 @@ const Login = () => {
             <form onSubmit={formik.handleSubmit}>
               {!isLogin && (
                 <div className="mb-4">
-                  <label className="block text-gray-700">Name</label>
+                  <label className="block text-gray-700">
+                      Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="name"
@@ -436,7 +438,9 @@ const Login = () => {
               )}
 
               <div className="mb-4">
-                <label className="block text-gray-700">Email</label>
+                <label className="block text-gray-700">Email
+                <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -453,7 +457,9 @@ const Login = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700">Password</label>
+                <label className="block text-gray-700">Password
+                <span className="text-red-500">*</span>
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -480,7 +486,9 @@ const Login = () => {
 
               {!isLogin && (
                 <div className="mb-4">
-                  <label className="block text-gray-700">Phone Number</label>
+                  <label className="block text-gray-700">Phone Number
+                  <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="phone"

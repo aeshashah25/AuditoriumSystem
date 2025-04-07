@@ -250,7 +250,7 @@ function BookAuditorium() {
                 </p>
               )}
 
-              <label className="block text-gray-700 font-semibold mb-1">Select Dates:</label>
+              <label className="block text-gray-700 font-semibold mb-1">Select Dates:<span className="text-red-500">*</span></label>
               {isDateRangeMode ? (
                 <DatePicker
                   selectsRange
@@ -326,7 +326,9 @@ function BookAuditorium() {
             <div className="w-full md:w-1/3">
               <h2 className="text-3xl text-brown font-bold text-center mb-6">Book {auditorium.name}</h2>
 
-              <label className="block text-gray-700 font-semibold mb-1">Event Name:</label>
+              <label className="block text-gray-700 font-semibold mb-1">Event Name:
+              <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={eventName}
