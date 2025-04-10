@@ -251,28 +251,52 @@ app.post("/api/login", async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
+    // Check in UsersDetails table
     const userResult = await pool
       .request()
       .input("email", sql.NVarChar, email)
       .query("SELECT * FROM UsersDetails WHERE LOWER(email) = LOWER(@email)");
+    let user = userResult.recordset[0];
+    let role = "user";
 
-    const adminResult = await pool
-      .request()
-      .input("email", sql.NVarChar, email)
-      .query("SELECT * FROM AdminDetails WHERE LOWER(email) = LOWER(@email)");
+    // If not in UsersDetails, check in AdminDetails
+    if (!user) {
+      const adminResult = await pool
+        .request()
+        .input("email", sql.NVarChar, email)
+        .query("SELECT * FROM AdminDetails WHERE LOWER(email) = LOWER(@email)");
 
-    let user = userResult.recordset[0] || adminResult.recordset[0];
-    let role = userResult.recordset[0] ? "user" : "admin";
+      user = adminResult.recordset[0];
+      role = "admin";
+    }
+    // const adminResult = await pool
+    //   .request()
+    //   .input("email", sql.NVarChar, email)
+    //   .query("SELECT * FROM AdminDetails WHERE LOWER(email) = LOWER(@email)");
+
+    // let user = userResult.recordset[0] || adminResult.recordset[0];
+    // let role = userResult.recordset[0] ? "user" : "admin";
 
     if (!user) {
       return res.status(400).json({ message: "User or Admin not found" });
     }
 
+    // ✅ For users, check status is "active"
+    if (role === "user" && user.status?.toLowerCase() !== "active") {
+      return res.status(403).json({ message: "Account is inactive. Please contact support." });
+    }
+
+    // if (user.status?.toLowerCase() !== "active") {
+    //   return res.status(403).json({ message: "Account is inactive. Please contact support." });
+    // }
+
+    // Validate password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role },
       process.env.JWT_SECRET,
