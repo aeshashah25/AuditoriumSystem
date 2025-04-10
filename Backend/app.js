@@ -10,7 +10,7 @@ import multer from "multer";
 import './dashboard_server.js'; // Automatically starts the dashboard
 import './booking_server.js'; // Automatically starts the booking
 import twilio from "twilio";
-
+//const bookingCronRoute = require('./booking_cron');
 
 dotenv.config(); // Load environment variables
 
@@ -18,6 +18,9 @@ const app = express();
 
 // Use JSON body parser
 app.use(express.json());
+
+//for cancel automatic Booking
+//app.use('/api/booking', bookingCronRoute);
 
 // Use cookie parser for handling cookies
 app.use(cookieParser());
