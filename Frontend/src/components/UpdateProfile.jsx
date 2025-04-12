@@ -113,35 +113,43 @@ const UpdateProfile = () => {
             <form onSubmit={formik.handleSubmit}>
               {/* Profile Picture */}
               <div className="mb-4 text-center">
-                <input
-                  type="file"
-                  name="profilePic"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="mb-2"
-                />
-                <div className="mb-4">
-                  {imagePreview ? (
-                    <img
-                      alt="Profile"
-                      src={URL.createObjectURL(imagePreview)}
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
-                  ) : profilePicUrl ? (
-                    <img
-                      alt="Profile"
-                      src={profilePicUrl}
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      alt="Profile"
-                      src="/path/to/defaultProfilePic.jpg"
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
-                  )}
+                <div className="flex flex-col items-center">
+                  <div className="mb-2">
+                    {imagePreview ? (
+                      <img
+                        alt="Profile Preview"
+                        src={URL.createObjectURL(imagePreview)}
+                        className="w-20 h-20 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : profilePicUrl ? (
+                      <img
+                        alt="Profile"
+                        src={profilePicUrl}
+                        className="w-20 h-20 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <img
+                        alt="Default Profile"
+                        src="/path/to/defaultProfilePic.jpg"
+                        className="w-20 h-20 rounded-full object-cover border border-gray-300"
+                      />
+                    )}
+                  </div>
+
+                  <input
+                    type="file"
+                    name="profilePic"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="mb-2"
+                  />
+
+                  <p className="text-sm text-gray-500 text-center">
+                    Only image files (JPG, PNG, etc.) under 5 MB are allowed.
+                  </p>
                 </div>
               </div>
+
 
               {/* Name Field */}
               <div className="mb-4">

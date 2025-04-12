@@ -161,6 +161,9 @@ const CreateAuditoriums = () => {
           <label className="block text-gray-700 font-medium mb-1">
             Upload Images <span className="text-red-500">*</span>
           </label>
+          <p className="text-sm text-gray-500 mb-2">
+            Only image files are allowed (JPG, PNG, etc.), must be less than 5 MB each, and you can upload up to 5 images at a time.
+          </p>
           <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-1 focus:ring-blue-400" required={!id} />
 
           {existingImages.length > 0 && (
