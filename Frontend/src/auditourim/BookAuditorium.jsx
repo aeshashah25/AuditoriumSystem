@@ -272,21 +272,51 @@ function BookAuditorium() {
               {selectedDates.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold">
-                    {isDateRangeMode ? `Selected Date Range: ${selectedDates[0]} to ${selectedDates[selectedDates.length - 1]}` : "Selected Dates:"}
+                    {isDateRangeMode
+                      ? `Selected Date Range: ${new Date(selectedDates[0]).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })} to ${new Date(
+                        selectedDates[selectedDates.length - 1]
+                      ).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}`
+                      : "Selected Dates:"}
                   </h3>
 
                   {!isDateRangeMode ? (
                     selectedDates.map((date, index) => (
                       <div key={index}>
-                        <h4 className="text-md font-semibold mt-2">{date}</h4>
+                        <h4 className="text-md font-semibold mt-2">
+                          {new Date(date).toLocaleDateString("en-US", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </h4>
                         <div className="grid grid-cols-3 gap-2">
                           {timeSlots.map((slot, slotIndex) => (
                             <button
                               key={slotIndex}
                               className={`p-2 border rounded-md 
-                      ${selectedSlots[date]?.includes(slot) ? "bg-blue-500 text-white" : "bg-gray-100"} 
-                      ${bookedSlots[date]?.includes(slot) ? "bg-gray-300 cursor-not-allowed opacity-50" : ""}`}
-                              onClick={() => !bookedSlots[date]?.includes(slot) && handleSlotChange(date, slot)}
+                  ${selectedSlots[date]?.includes(slot)
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-100"
+                                } 
+                  ${bookedSlots[date]?.includes(slot)
+                                  ? "bg-gray-300 cursor-not-allowed opacity-50"
+                                  : ""
+                                }`}
+                              onClick={() =>
+                                !bookedSlots[date]?.includes(slot) &&
+                                handleSlotChange(date, slot)
+                              }
                               disabled={bookedSlots[date]?.includes(slot)}
                             >
                               {slot}
@@ -300,15 +330,25 @@ function BookAuditorium() {
                       <h4 className="text-md font-semibold mt-2">Time Slots:</h4>
                       <div className="grid grid-cols-3 gap-2">
                         {timeSlots.map((slot, slotIndex) => {
-                          const isBooked = selectedDates.some((date) => bookedSlots[date]?.includes(slot));
+                          const isBooked = selectedDates.some((date) =>
+                            bookedSlots[date]?.includes(slot)
+                          );
 
                           return (
                             <button
                               key={slotIndex}
                               className={`p-2 border rounded-md 
-                      ${selectedSlots[selectedDates[0]]?.includes(slot) ? "bg-blue-500 text-white" : "bg-gray-100"} 
-                      ${isBooked ? "bg-gray-300 cursor-not-allowed opacity-50" : ""}`}
-                              onClick={() => !isBooked && handleSlotChange(selectedDates[0], slot)}
+                  ${selectedSlots[selectedDates[0]]?.includes(slot)
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-100"
+                                } 
+                  ${isBooked
+                                  ? "bg-gray-300 cursor-not-allowed opacity-50"
+                                  : ""
+                                }`}
+                              onClick={() =>
+                                !isBooked && handleSlotChange(selectedDates[0], slot)
+                              }
                               disabled={isBooked}
                             >
                               {slot}
@@ -320,6 +360,7 @@ function BookAuditorium() {
                   )}
                 </div>
               )}
+
             </div>
 
             {/* Right Section: Booking Details */}
@@ -327,7 +368,7 @@ function BookAuditorium() {
               <h2 className="text-3xl text-brown font-bold text-center mb-6">Book {auditorium.name}</h2>
 
               <label className="block text-gray-700 font-semibold mb-1">Event Name:
-              <span className="text-red-500">*</span>
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
