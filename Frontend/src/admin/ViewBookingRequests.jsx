@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import BookingRow from "../admin/BookingRow";
 import { useModal } from "../components/ModalContext";
 
-function ViewBookingRequests() {
-  const { showModal, showConfirmationModal } = useModal();
-  const [isProcessing, setIsProcessing] = useState(false); // Track action processing state
+function BookingRequests() {
+  const { showModal } = useModal();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [discount, setDiscount] = useState("");
-  const [rejectReason, setRejectReason] = useState("");
-  const [actionType, setActionType] = useState(""); // "approve" or "reject"
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -28,491 +23,43 @@ function ViewBookingRequests() {
     }
   };
 
-  const formatDateTime = (isoString) => {
-    if (!isoString) return "N/A";
-    const date = new Date(isoString);
-    const day = date.getUTCDate();
-    const month = date.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
-    const year = date.getUTCFullYear();
-    let hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    return `${day} ${month} ${year} at ${hours}:${minutes} ${ampm}`;
-  };
-
-  const openModal = (booking) => {
-    setSelectedBooking(booking);
-    setDiscount(booking.approved_discount || "");
-    setRejectReason("");
-    setActionType("");
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedBooking(null);
-    setDiscount("");
-    setRejectReason("");
-  };
-
-  const handleAction = async () => {
-    if (actionType === "approve" && !discount) {
-      showModal("Enter discount percentage!", "error");
-      return;
-    }
-    if (actionType === "reject" && !rejectReason) {
-      showModal("Enter rejection reason!", "error");
-      return;
-    }
-
-    setIsProcessing(true); // Start loading
-
-    if (actionType === "approve") {
-      try {
-        const res = await axios.get(`http://localhost:5001/booked-slots/${selectedBooking.auditorium_id}`);
-        const bookedSlots = res.data; // { "2025-04-22": ["9:00-10:00", ...], ... }
-        const requestedSlots = selectedBooking.dates; // [{ date: '2025-04-22', time_slots: ['9:00-10:00'] }]
-  
-        // ✅ Check for clashes
-        let hasConflict = false;
-        for (let entry of requestedSlots) {
-          const { date, time_slots } = entry;
-          if (bookedSlots[date]) {
-            for (let slot of time_slots) {
-              if (bookedSlots[date].includes(slot)) {
-                hasConflict = true;
-                break;
-              }
-            }
-          }
-          if (hasConflict) break;
-        }
-  
-        if (hasConflict) {
-          showModal("Slot already booked. Cannot approve this request.", "error");
-          setIsProcessing(false);
-          return;
-        }
-  
-      } catch (err) {
-        console.error("❌ Error checking slot conflict:", err);
-        showModal("Error validating time slots", "error");
-        setIsProcessing(false);
-        return;
-      }
-    }
-
-    try {
-      await axios.post("http://localhost:5001/update-booking-status", {
-        booking_id: selectedBooking.id,
-        action: actionType,
-        approved_discount: actionType === "approve" ? parseFloat(discount) : null,
-        reject_reason: actionType === "reject" ? rejectReason : null,
-        user_email: selectedBooking.user_email,
-        event_name: selectedBooking.event_name,
-        discount_amount: selectedBooking.discount_amount,
-        dates: JSON.stringify(selectedBooking.dates),
-      });
-
-      // Simulate delay for better UX
-      setTimeout(() => {
-        showModal(`Booking ${actionType}d successfully!`, "success");
-        closeModal();
-        fetchBookings();
-        setIsProcessing(false); // Stop loading after confirmation message
-      }, 1500); // Adjust time as needed
-    } catch (error) {
-      showModal("Error updating booking status", "error");
-      console.error(`❌ Error updating booking status:`, error);
-    }
-  };
-
-  if (loading) {
-    return <p className="text-center text-gray-600 mt-5">Loading bookings...</p>;
-  }
+  if (loading) return <p className="text-center mt-5">Loading bookings...</p>;
 
   return (
-    <div className="p-6 bg-white shadow-md mt-6 mx-4 sm:mx-6 md:mx-10 overflow-hidden">
-      <h2 className="text-2xl sm:text-3xl font-bold text-black-700 mb-6 ">
-        View Booking Requests
-      </h2>
-
+    <div className="p-6 bg-white shadow-md mt-6 mx-4">
+      <h2 className="text-2xl font-bold mb-6">View Booking Requests</h2>
       {bookings.length === 0 ? (
         <p className="text-center text-gray-500">No bookings found.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] md:min-w-[900px] border-collapse border border-gray-200 text-sm sm:text-base">
+          <table className="w-full border-collapse border text-sm">
             <thead>
               <tr className="bg-gray-100 text-left">
-                <th className="border p-2 sm:p-3">SR NO</th>
-                <th className="border p-2 sm:p-3">User</th>
-                <th className="border p-2 sm:p-3">Auditorium</th>
-                <th className="border p-2 sm:p-3">Date</th>
-                <th className="border p-2 sm:p-3">Event Name</th>
-                <th className="border p-2 sm:p-3">Cost</th>
-                <th className="border p-2 sm:p-3">Request At</th>
-                <th className="border p-2 sm:p-3 text-center">Actions</th>
+                <th className="border p-2">SR NO</th>
+                <th className="border p-2">User</th>
+                <th className="border p-2">Auditorium</th>
+                <th className="border p-2">Date</th>
+                <th className="border p-2">Event Name</th>
+                <th className="border p-2">Cost</th>
+                <th className="border p-2">Request At</th>
+                <th className="border p-2 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((booking, index) => (
-                <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="border p-2 text-center">{index + 1}</td>
-                  <td className="border p-2 sm:p-3">
-                    {booking.user_name}
-                    <br />
-                    <span className="text-xs text-gray-500 break-words">
-                      {booking.user_email}
-                    </span>
-                  </td>
-                  <td className="border p-2 sm:p-3">{booking.auditorium_name}</td>
-                  <td className="border p-2 sm:p-3">
-                    {(() => {
-                      if (!Array.isArray(booking.dates) || booking.dates.length === 0) {
-                        return <p className="text-gray-500">No dates available</p>;
-                      }
-
-                      const sortedDates = booking.dates
-                        .map((dateObj) => ({
-                          date: dateObj.date || null,
-                          date_range: dateObj.date_range || null,
-                          time_slots: Array.isArray(dateObj.time_slots)
-                            ? dateObj.time_slots.sort()
-                            : [],
-                        }))
-                        .sort(
-                          (a, b) =>
-                            new Date(a.date || a.date_range.split(" - ")[0]) -
-                            new Date(b.date || b.date_range.split(" - ")[0])
-                        );
-
-                      const formattedDates = [];
-                      let tempStart = sortedDates[0]?.date || sortedDates[0]?.date_range;
-                      let prevTimeSlots = sortedDates[0]?.time_slots;
-                      let currentRange = [tempStart];
-
-                      for (let i = 1; i < sortedDates.length; i++) {
-                        const { date, date_range, time_slots } = sortedDates[i];
-                        const currentDate = date || date_range;
-
-                        if (JSON.stringify(prevTimeSlots) === JSON.stringify(time_slots)) {
-                          currentRange.push(currentDate);
-                        } else {
-                          formattedDates.push({
-                            date_range: formatDateRange(currentRange),
-                            time_slots: formatTimeSlots(prevTimeSlots),
-                          });
-
-                          currentRange = [currentDate];
-                          prevTimeSlots = time_slots;
-                        }
-                      }
-
-                      formattedDates.push({
-                        date_range: formatDateRange(currentRange),
-                        time_slots: formatTimeSlots(prevTimeSlots),
-                      });
-
-                      return formattedDates.map((entry, index) => (
-                        <div key={index} className="text-xs mb-1 p-1 bg-gray-100 rounded">
-                          <span className="font-semibold">📅 {entry.date_range}</span>
-                          <br />
-                          🕒 {entry.time_slots}
-                        </div>
-                      ));
-
-                      function formatDateRange(dateStr) {
-                        if (Array.isArray(dateStr)) {
-                          const startDate = formatDate(dateStr[0].split(" - ")[0]);
-                          const endDate = formatDate(dateStr[dateStr.length - 1].split(" - ").pop());
-                          return startDate === endDate ? startDate : `${startDate} to ${endDate}`;
-                        }
-                        return formatDate(dateStr.split(" - ")[0]) + " to " + formatDate(dateStr.split(" - ")[1]);
-                      }
-
-                      function formatDate(dateStr) {
-                        if (!dateStr) return "Invalid Date";
-                        const date = new Date(dateStr.trim());
-                        return isNaN(date.getTime())
-                          ? "Invalid Date"
-                          : date.toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          });
-                      }
-
-                      function formatTimeSlots(timeSlots) {
-                        if (timeSlots.length === 0) return "No time slots";
-                        if (timeSlots.length === 1) return timeSlots[0];
-
-                        let groupedSlots = [];
-                        let startSlot = timeSlots[0].split(" - ")[0];
-                        let endSlot = timeSlots[0].split(" - ")[1];
-
-                        for (let i = 1; i < timeSlots.length; i++) {
-                          const [currentStart, currentEnd] = timeSlots[i].split(" - ");
-
-                          if (currentStart === endSlot) {
-                            endSlot = currentEnd;
-                          } else {
-                            groupedSlots.push(`${startSlot} - ${endSlot}`);
-                            startSlot = currentStart;
-                            endSlot = currentEnd;
-                          }
-                        }
-                        groupedSlots.push(`${startSlot} - ${endSlot}`);
-
-                        return groupedSlots.join(", ");
-                      }
-                    })()}
-
-                  </td>
-                  <td className="border p-2 sm:p-3">{booking.event_name}</td>
-                  <td className="border p-2 sm:p-3">₹{booking.total_amount}</td>
-                  <td className="border p-2 sm:p-3">{formatDateTime(booking.created_at)}</td>
-                  <td className="border p-2 sm:p-3 text-center">
-                    {booking.booking_status === "Pending" && (
-                      <button
-                        onClick={() => openModal(booking)}
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 sm:px-3 sm:py-2 rounded"
-                      >
-                        Manage Booking
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                <BookingRow
+                  key={booking.id}
+                  index={index}
+                  booking={booking}
+                  refetch={fetchBookings}
+                />
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {isModalOpen && selectedBooking && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-md shadow-lg w-full max-w-md sm:max-w-lg">
-            <h2 className="text-lg sm:text-xl font-bold mb-4 text-center">
-              Manage Booking
-            </h2>
-            <p>
-              <strong>User:</strong> {selectedBooking.user_name} ({" "}
-              <span className="text-xs text-gray-500">{selectedBooking.user_email}</span>)
-            </p>
-            <p>
-              <strong>Auditorium:</strong> {selectedBooking.auditorium_name}
-            </p>
-            <p>
-              <strong>Event:</strong> {selectedBooking.event_name}
-            </p>
-            <p>
-              <strong>Date & Time:</strong>
-              {(() => {
-                if (!Array.isArray(selectedBooking.dates) || selectedBooking.dates.length === 0) {
-                  return <p className="text-gray-500">No dates available</p>;
-                }
-
-                const sortedDates = selectedBooking.dates
-                  .map((dateObj) => ({
-                    date: dateObj.date || null,
-                    date_range: dateObj.date_range || null,
-                    time_slots: Array.isArray(dateObj.time_slots)
-                      ? dateObj.time_slots.sort()
-                      : [],
-                  }))
-                  .sort(
-                    (a, b) =>
-                      new Date(a.date || a.date_range.split(" - ")[0]) -
-                      new Date(b.date || b.date_range.split(" - ")[0])
-                  );
-
-                const formattedDates = [];
-                let tempStart = sortedDates[0]?.date || sortedDates[0]?.date_range;
-                let prevTimeSlots = sortedDates[0]?.time_slots;
-                let currentRange = [tempStart];
-
-                for (let i = 1; i < sortedDates.length; i++) {
-                  const { date, date_range, time_slots } = sortedDates[i];
-                  const currentDate = date || date_range;
-
-                  if (JSON.stringify(prevTimeSlots) === JSON.stringify(time_slots)) {
-                    currentRange.push(currentDate);
-                  } else {
-                    formattedDates.push({
-                      date_range: formatDateRange(currentRange),
-                      time_slots: formatTimeSlots(prevTimeSlots),
-                    });
-
-                    currentRange = [currentDate];
-                    prevTimeSlots = time_slots;
-                  }
-                }
-
-                formattedDates.push({
-                  date_range: formatDateRange(currentRange),
-                  time_slots: formatTimeSlots(prevTimeSlots),
-                });
-
-                return formattedDates.map((entry, index) => (
-                  <div key={index} className="text-xs mb-1 p-1 bg-gray-100 rounded">
-                    <span className="font-semibold">📅 {entry.date_range}</span>
-                    <br />
-                    🕒 {entry.time_slots}
-                  </div>
-                ));
-
-                function formatDateRange(dateStr) {
-                  if (Array.isArray(dateStr)) {
-                    const startDate = formatDate(dateStr[0].split(" - ")[0]);
-                    const endDate = formatDate(dateStr[dateStr.length - 1].split(" - ").pop());
-                    return startDate === endDate ? startDate : `${startDate} to ${endDate}`;
-                  }
-                  return formatDate(dateStr.split(" - ")[0]) + " to " + formatDate(dateStr.split(" - ")[1]);
-                }
-
-                function formatDate(dateStr) {
-                  if (!dateStr) return "Invalid Date";
-                  const date = new Date(dateStr.trim());
-                  return isNaN(date.getTime())
-                    ? "Invalid Date"
-                    : date.toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    });
-                }
-
-                function formatTimeSlots(timeSlots) {
-                  if (timeSlots.length === 0) return "No time slots";
-                  if (timeSlots.length === 1) return timeSlots[0];
-
-                  let groupedSlots = [];
-                  let startSlot = timeSlots[0].split(" - ")[0];
-                  let endSlot = timeSlots[0].split(" - ")[1];
-
-                  for (let i = 1; i < timeSlots.length; i++) {
-                    const [currentStart, currentEnd] = timeSlots[i].split(" - ");
-
-                    if (currentStart === endSlot) {
-                      endSlot = currentEnd;
-                    } else {
-                      groupedSlots.push(`${startSlot} - ${endSlot}`);
-                      startSlot = currentStart;
-                      endSlot = currentEnd;
-                    }
-                  }
-                  groupedSlots.push(`${startSlot} - ${endSlot}`);
-
-                  return groupedSlots.join(", ");
-                }
-              })()}
-
-            </p>
-            <p>
-              <strong>Amenities:</strong>{" "}
-              {selectedBooking.amenities && selectedBooking.amenities.trim() !== ""
-                ? selectedBooking.amenities
-                : "No amenities available for this booking."}
-            </p>
-
-            <p>
-              <strong>Cost:</strong> ₹{selectedBooking.total_amount}
-            </p>
-
-            {!actionType && (
-              <div className="mt-4 flex justify-center gap-3">
-                <button
-                  onClick={() => setActionType("approve")}
-                  className="py-1 px-3 rounded text-white bg-green-500 hover:bg-green-700"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => setActionType("reject")}
-                  className="py-1 px-3 rounded text-white bg-red-500 hover:bg-red-700"
-                >
-                  Reject
-                </button>
-              </div>
-            )}
-
-            {actionType === "approve" && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium">Discount (%)</label>
-                <input
-                  type="number"
-                  className="w-full p-2 border rounded mt-1"
-                  placeholder="Enter discount percentage"
-                  value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                />
-              </div>
-            )}
-
-            {actionType === "reject" && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium">Rejection Reason</label>
-                <textarea
-                  className="w-full p-2 border rounded mt-1"
-                  placeholder="Enter rejection reason"
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                />
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-center gap-4">
-              {/* Cancel Button (Always Visible) */}
-              <button
-                onClick={closeModal}
-                className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded"
-              >
-                Cancel
-              </button>
-
-              {/* Approve/Reject Button (Only Show When actionType is Set) */}
-              {actionType && (
-                <button
-                  onClick={handleAction}
-                  disabled={isProcessing}
-                  className={`py-2 px-4 rounded text-white flex items-center justify-center gap-2
-                  ${actionType === "approve" ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"}
-                `}
-                >
-                  {isProcessing ? (
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    `${actionType === "approve" ? "Approve" : "Reject"} Booking`
-                  )}
-                </button>
-
-              )}
-            </div>
-
-          </div>
         </div>
       )}
     </div>
   );
 }
 
-export default ViewBookingRequests;
+export default BookingRequests;
