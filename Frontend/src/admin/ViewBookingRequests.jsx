@@ -68,6 +68,41 @@ function ViewBookingRequests() {
 
     setIsProcessing(true); // Start loading
 
+    if (actionType === "approve") {
+      try {
+        const res = await axios.get(`http://localhost:5001/booked-slots/${selectedBooking.auditorium_id}`);
+        const bookedSlots = res.data; // { "2025-04-22": ["9:00-10:00", ...], ... }
+        const requestedSlots = selectedBooking.dates; // [{ date: '2025-04-22', time_slots: ['9:00-10:00'] }]
+  
+        // ✅ Check for clashes
+        let hasConflict = false;
+        for (let entry of requestedSlots) {
+          const { date, time_slots } = entry;
+          if (bookedSlots[date]) {
+            for (let slot of time_slots) {
+              if (bookedSlots[date].includes(slot)) {
+                hasConflict = true;
+                break;
+              }
+            }
+          }
+          if (hasConflict) break;
+        }
+  
+        if (hasConflict) {
+          showModal("Slot already booked. Cannot approve this request.", "error");
+          setIsProcessing(false);
+          return;
+        }
+  
+      } catch (err) {
+        console.error("❌ Error checking slot conflict:", err);
+        showModal("Error validating time slots", "error");
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     try {
       await axios.post("http://localhost:5001/update-booking-status", {
         booking_id: selectedBooking.id,

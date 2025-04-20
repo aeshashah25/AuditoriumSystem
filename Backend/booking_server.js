@@ -129,7 +129,7 @@ app.get("/booked-slots/:auditoriumId", async (req, res) => {
       SELECT Dates
       FROM bookings 
       WHERE AuditoriumID = @auditoriumId 
-      AND booking_status IN ('pending', 'approved','confirm')
+      AND booking_status IN ('approved','confirm')
     `;
 
     const result = await pool.request()
